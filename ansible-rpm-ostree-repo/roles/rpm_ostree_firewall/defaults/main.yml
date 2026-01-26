@@ -1,0 +1,3 @@
+---
+# Firewall configuration defaults
+# Ports are inherited from group_vars
