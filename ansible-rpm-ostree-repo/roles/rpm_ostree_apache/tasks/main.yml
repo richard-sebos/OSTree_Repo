@@ -10,8 +10,8 @@
 - name: Verify Apache is installed and running
   ansible.builtin.assert:
     that:
-      - "apache_service_name in services"
-      - "services[apache_service_name].state == 'running'"
+      - "(apache_service_name ~ '.service') in services or apache_service_name in services"
+      - "services[apache_service_name ~ '.service'].state == 'running' or services[apache_service_name].state == 'running'"
     fail_msg: "Apache ({{ apache_service_name }}) is not installed or not running. Please run the Flatpak repo setup first."
     success_msg: "Apache is running, extending configuration for rpm-ostree"
 
