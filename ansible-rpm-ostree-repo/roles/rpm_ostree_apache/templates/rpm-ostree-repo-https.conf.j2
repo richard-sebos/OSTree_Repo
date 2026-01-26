@@ -1,0 +1,34 @@
+# rpm-ostree Repository HTTPS Configuration
+# Extends existing Flatpak HTTPS configuration with rpm-ostree endpoint
+
+# Main HTTPS VirtualHost - Add rpm-ostree alias to existing HTTPS server
+<VirtualHost *:{{ hostvars[inventory_hostname].flatpak_repo_https_port | default('8443') }}>
+    ServerName {{ hostvars[inventory_hostname].flatpak_repo_server_name | default(ansible_fqdn) }}
+
+    SSLEngine on
+    SSLCertificateFile {{ ssl_cert_file }}
+    SSLCertificateKeyFile {{ ssl_key_file }}
+
+    # rpm-ostree repository alias
+    Alias {{ rpm_ostree_http_alias }} {{ rpm_ostree_repo_path }}
+
+    <Directory {{ rpm_ostree_repo_path }}>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # Enable CORS for OSTree client access
+        Header set Access-Control-Allow-Origin "*"
+    </Directory>
+
+    # Disable directory listing for objects directory
+    <Directory {{ rpm_ostree_repo_path }}/objects>
+        Options -Indexes
+    </Directory>
+
+    ErrorLog /var/log/{{ apache_service_name }}/rpm-ostree-repo-error.log
+    CustomLog /var/log/{{ apache_service_name }}/rpm-ostree-repo-access.log combined
+</VirtualHost>
+
+# Note: HTTP to HTTPS redirect is already configured in the Flatpak setup
+# This configuration extends the existing HTTPS VirtualHost

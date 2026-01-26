@@ -1,0 +1,49 @@
+{
+  "ref": "fedora/x86_64/kinoite/stable",
+  "repos": ["fedora", "fedora-updates"],
+  "selinux": true,
+  "documentation": false,
+  "boot-location": "new",
+  "tmp-is-dir": true,
+
+  "recommends": false,
+
+  "packages": [
+    "fedora-release-kinoite",
+    "kernel",
+    "systemd",
+    "rpm-ostree",
+    "dracut-config-generic",
+    "nss-altfiles",
+    "sssd-client",
+
+    "plasma-desktop",
+    "plasma-workspace",
+    "sddm",
+    "sddm-breeze",
+    "dolphin",
+    "konsole",
+
+    "NetworkManager",
+    "firewalld",
+
+    "vim-enhanced",
+    "git",
+    "wget",
+    "curl"
+  ],
+
+  "packages-x86_64": [
+    "grub2-efi-x64",
+    "shim-x64"
+  ],
+
+  "exclude-packages": [
+    "PackageKit"
+  ],
+
+  "postprocess": [
+    "ln -sf /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.target",
+    "systemctl enable sddm.service"
+  ]
+}

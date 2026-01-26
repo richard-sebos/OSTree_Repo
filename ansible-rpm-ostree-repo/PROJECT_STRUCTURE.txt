@@ -1,0 +1,150 @@
+ansible-rpm-ostree-repo/
+│
+├── README.md                          # Comprehensive documentation
+│                                       # - Architecture overview
+│                                       # - Installation instructions
+│                                       # - Configuration guide
+│                                       # - Troubleshooting
+│
+├── QUICKSTART.md                      # 5-minute setup guide
+│                                       # - Minimal steps to get running
+│                                       # - Quick verification
+│
+├── ARCHITECTURE.md                    # Visual architecture diagrams
+│                                       # - System topology
+│                                       # - Data flow
+│                                       # - Security model
+│
+├── DEPLOYMENT_CHECKLIST.md            # Step-by-step deployment guide
+│                                       # - Pre-deployment checks
+│                                       # - Verification steps
+│                                       # - Rollback procedures
+│
+├── ansible.cfg                        # Ansible configuration
+│                                       # - Sets default inventory
+│                                       # - Configures SSH settings
+│
+├── requirements.yml                   # Ansible Galaxy dependencies
+│                                       # - community.general
+│                                       # - ansible.posix
+│
+├── playbooks/
+│   └── setup-rpm-ostree-repo.yml     # Main playbook
+│                                       # - Orchestrates all roles
+│                                       # - Pre/post tasks
+│                                       # - Display helpful messages
+│
+├── roles/
+│   │
+│   ├── rpm_ostree_repo/              # Repository initialization role
+│   │   ├── defaults/
+│   │   │   └── main.yml              # Default variables
+│   │   │                              # - Repository paths
+│   │   │                              # - Repository mode
+│   │   └── tasks/
+│   │       └── main.yml              # Tasks for repo setup
+│   │                                  # - Create directories
+│   │                                  # - Initialize OSTree repo
+│   │                                  # - Set permissions
+│   │
+│   ├── rpm_ostree_apache/            # Apache configuration role
+│   │   ├── defaults/
+│   │   │   └── main.yml              # Default variables
+│   │   │                              # - HTTP alias
+│   │   │                              # - Apache paths
+│   │   ├── tasks/
+│   │   │   └── main.yml              # Tasks for Apache
+│   │   │                              # - Verify Apache running
+│   │   │                              # - Deploy config
+│   │   │                              # - Test configuration
+│   │   ├── templates/
+│   │   │   └── rpm-ostree-repo.conf.j2  # Apache config template
+│   │   │                                 # - Alias directive
+│   │   │                                 # - Directory permissions
+│   │   │                                 # - CORS headers
+│   │   └── handlers/
+│   │       └── main.yml              # Apache reload handler
+│   │
+│   └── rpm_ostree_selinux/           # SELinux configuration role
+│       ├── defaults/
+│       │   └── main.yml              # Default variables
+│       └── tasks/
+│           └── main.yml              # Tasks for SELinux
+│                                      # - Check SELinux status
+│                                      # - Set file contexts
+│                                      # - Apply contexts
+│
+├── inventory/
+│   └── hosts.yml                     # Server inventory (template)
+│                                      # - Define your servers here
+│                                      # - Set connection parameters
+│
+├── group_vars/
+│   └── rpm_ostree_repo_servers.yml   # Configuration variables
+│                                      # - Repository paths
+│                                      # - HTTP settings
+│                                      # - Override defaults here
+│
+└── examples/
+    └── kinoite.json                  # Sample treefile
+                                       # - Fedora Kinoite configuration
+                                       # - Package list
+                                       # - Post-processing steps
+
+KEY FEATURES:
+=============
+
+✓ Standalone playbook (doesn't modify Flatpak setup)
+✓ Reuses existing Apache infrastructure
+✓ Minimal changes to the server
+✓ Idempotent (safe to run multiple times)
+✓ Tagged tasks for selective execution
+✓ Comprehensive documentation
+✓ Production-ready with security considerations
+
+WHAT IT DOES:
+=============
+
+1. Creates /srv/ostree/rpm-ostree/kinoite directory
+2. Initializes OSTree repository in archive-z2 mode
+3. Configures Apache to serve at /repo/kinoite
+4. Sets SELinux context (httpd_sys_content_t)
+5. Verifies all components are working
+
+WHAT IT DOESN'T DO:
+===================
+
+✗ Install Apache (assumes already installed)
+✗ Modify firewall (uses existing port 8080)
+✗ Change Flatpak configuration
+✗ Compose images (you do this after setup)
+✗ Configure GPG signing (optional, manual step)
+
+WORKFLOW:
+=========
+
+Setup Phase:
+1. Edit inventory/hosts.yml with your server
+2. Run ansible-playbook playbooks/setup-rpm-ostree-repo.yml
+3. Verify with curl http://server:8080/repo/kinoite/config
+
+Composition Phase:
+1. Create/customize kinoite.json treefile
+2. Run rpm-ostree compose tree
+3. Update summary with ostree summary -u
+
+Client Phase:
+1. Add remote: ostree remote add kinoite http://server:8080/repo/kinoite
+2. Rebase: rpm-ostree rebase kinoite:fedora/x86_64/kinoite/stable
+3. Reboot
+
+INTEGRATION WITH FLATPAK:
+=========================
+
+Shares:                    Separate:
+- Apache server           - Repository paths
+- Port 8080               - OSTree refs
+- SELinux policies        - Client tools
+- Firewall rules          - Content type
+
+Both repositories coexist peacefully on the same server!

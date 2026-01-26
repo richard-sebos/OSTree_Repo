@@ -1,0 +1,70 @@
+---
+# Apache Configuration for rpm-ostree Repository
+# Version: 2.0.0
+# Last Updated: 2026-01-26
+# Purpose: Configure Apache to serve rpm-ostree repository alongside existing Flatpak repo
+
+- name: Check if Apache is installed
+  ansible.builtin.service_facts:
+
+- name: Verify Apache is installed and running
+  ansible.builtin.assert:
+    that:
+      - "apache_service_name in services"
+      - "services[apache_service_name].state == 'running'"
+    fail_msg: "Apache ({{ apache_service_name }}) is not installed or not running. Please run the Flatpak repo setup first."
+    success_msg: "Apache is running, extending configuration for rpm-ostree"
+
+- name: Check if SSL certificates exist (when HTTPS enabled)
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ ssl_cert_file }}"
+    - "{{ ssl_key_file }}"
+  register: ssl_cert_check
+  when: rpm_ostree_enable_https | bool
+
+- name: Verify SSL certificates exist (when HTTPS enabled)
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "SSL certificate not found: {{ item.item }}. Please run the Flatpak HTTPS setup first or set rpm_ostree_enable_https: false"
+    success_msg: "SSL certificates found, will configure HTTPS"
+  loop: "{{ ssl_cert_check.results }}"
+  when:
+    - rpm_ostree_enable_https | bool
+    - ssl_cert_check is defined
+
+- name: Deploy Apache configuration (HTTP only)
+  ansible.builtin.template:
+    src: rpm-ostree-repo-http.conf.j2
+    dest: "{{ apache_config_dir }}/rpm-ostree-repo.conf"
+    mode: '0644'
+  when: not (rpm_ostree_enable_https | bool)
+  notify: Reload Apache
+
+- name: Deploy Apache configuration (HTTPS)
+  ansible.builtin.template:
+    src: rpm-ostree-repo-https.conf.j2
+    dest: "{{ apache_config_dir }}/rpm-ostree-repo.conf"
+    mode: '0644'
+  when: rpm_ostree_enable_https | bool
+  notify: Reload Apache
+
+- name: Enable site (Debian/Ubuntu)
+  ansible.builtin.command:
+    cmd: a2ensite rpm-ostree-repo
+  when: ansible_os_family == "Debian"
+  notify: Reload Apache
+  changed_when: false
+
+- name: Test Apache configuration
+  ansible.builtin.command:
+    cmd: "{{ 'apachectl' if ansible_os_family == 'RedHat' else 'apache2ctl' }} configtest"
+  register: apache_config_test
+  changed_when: false
+  failed_when: false
+
+- name: Display Apache configuration test results
+  ansible.builtin.debug:
+    msg: "Apache configuration test: {{ apache_config_test.stderr | default('OK') }}"

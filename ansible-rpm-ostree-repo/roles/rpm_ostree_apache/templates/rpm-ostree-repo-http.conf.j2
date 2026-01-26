@@ -1,0 +1,18 @@
+# rpm-ostree Repository Configuration
+# Extends existing Apache configuration to serve Kinoite images
+
+Alias {{ rpm_ostree_http_alias }} {{ rpm_ostree_repo_path }}
+
+<Directory {{ rpm_ostree_repo_path }}>
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+
+    # Enable CORS for OSTree client access
+    Header set Access-Control-Allow-Origin "*"
+</Directory>
+
+# Disable directory listing for objects directory
+<Directory {{ rpm_ostree_repo_path }}/objects>
+    Options -Indexes
+</Directory>

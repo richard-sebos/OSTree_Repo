@@ -1,0 +1,14 @@
+---
+# Apache configuration for rpm-ostree
+rpm_ostree_http_alias: /repo/kinoite
+rpm_ostree_enable_https: true
+
+# SSL certificate paths (reuse from Flatpak setup)
+ssl_cert_dir: /etc/pki/tls/certs
+ssl_key_dir: /etc/pki/tls/private
+ssl_cert_file: "{{ ssl_cert_dir }}/flatpak-repo.crt"
+ssl_key_file: "{{ ssl_key_dir }}/flatpak-repo.key"
+
+# Apache service name varies by OS
+apache_service_name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+apache_config_dir: "{{ '/etc/httpd/conf.d' if ansible_os_family == 'RedHat' else '/etc/apache2/sites-available' }}"

@@ -1,0 +1,69 @@
+---
+# rpm-ostree Repository Setup Playbook
+# Version: 1.0.0
+# Last Updated: 2026-01-25
+# Usage: ansible-playbook -i inventory/hosts.yml playbooks/setup-rpm-ostree-repo.yml
+#
+# Prerequisites:
+#   - Apache must already be installed and running (from Flatpak repo setup)
+#   - Server must have ostree and rpm-ostree packages installed
+
+- name: Setup rpm-ostree Repository Server
+  hosts: rpm_ostree_repo_servers
+  become: yes
+
+  pre_tasks:
+    - name: Check for required packages
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Verify rpm-ostree is installed
+      ansible.builtin.assert:
+        that:
+          - "'rpm-ostree' in ansible_facts.packages or 'rpm-ostree' in ansible_facts.packages.keys()"
+        fail_msg: "rpm-ostree package is not installed. Please install it first."
+        success_msg: "rpm-ostree is installed"
+      ignore_errors: yes
+
+    - name: Display setup information
+      ansible.builtin.debug:
+        msg:
+          - "========================================"
+          - "Starting rpm-ostree Repository Setup"
+          - "========================================"
+          - "This will extend your existing Apache server"
+          - "to serve rpm-ostree content for Kinoite"
+
+  roles:
+    - role: rpm_ostree_repo
+      tags: [repository, setup]
+
+    - role: rpm_ostree_selinux
+      tags: [selinux, security, setup]
+
+    - role: rpm_ostree_apache
+      tags: [apache, web, setup]
+
+  post_tasks:
+    - name: Display setup completion message
+      ansible.builtin.debug:
+        msg:
+          - "========================================"
+          - "rpm-ostree Repository Setup Complete!"
+          - "========================================"
+          - "Repository Path: {{ rpm_ostree_repo_path }}"
+          - "HTTP Alias: {{ rpm_ostree_http_alias }}"
+          - "{% if rpm_ostree_enable_https | default(false) | bool %}HTTPS Enabled: YES{% else %}HTTPS Enabled: NO{% endif %}"
+          - "{% if rpm_ostree_enable_https | default(false) | bool %}Repository URL: https://{{ ansible_default_ipv4.address }}:{{ hostvars[inventory_hostname].flatpak_repo_https_port | default('8443') }}{{ rpm_ostree_http_alias }}{% else %}Repository URL: http://{{ ansible_default_ipv4.address }}:{{ hostvars[inventory_hostname].flatpak_repo_http_port | default('8080') }}{{ rpm_ostree_http_alias }}{% endif %}"
+          - ""
+          - "Next Steps:"
+          - "1. Create a treefile for Kinoite (e.g., kinoite.json)"
+          - "2. Compose your first image:"
+          - "   sudo rpm-ostree compose tree --repo={{ rpm_ostree_repo_path }} kinoite.json"
+          - "3. Update the repository summary:"
+          - "   sudo ostree summary -u --repo={{ rpm_ostree_repo_path }}"
+          - "4. On Kinoite clients, add the remote:"
+          - "{% if rpm_ostree_enable_https | default(false) | bool %}   sudo ostree remote add --no-gpg-verify kinoite https://SERVER:8443{{ rpm_ostree_http_alias }}{% else %}   sudo ostree remote add --no-gpg-verify kinoite http://SERVER:8080{{ rpm_ostree_http_alias }}{% endif %}"
+          - "5. Rebase to your custom image:"
+          - "   sudo rpm-ostree rebase kinoite:fedora/x86_64/kinoite/stable"
+      tags: [always]

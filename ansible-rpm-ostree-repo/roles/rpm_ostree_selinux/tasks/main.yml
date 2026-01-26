@@ -1,0 +1,51 @@
+---
+# SELinux Configuration Role for rpm-ostree
+# Version: 1.0.0
+# Last Updated: 2026-01-25
+# Purpose: Configure SELinux for Apache access to rpm-ostree repository
+
+- name: Check if SELinux is enabled
+  ansible.builtin.command:
+    cmd: getenforce
+  register: selinux_status
+  changed_when: false
+  failed_when: false
+
+- name: Display SELinux status
+  ansible.builtin.debug:
+    msg: "SELinux status: {{ selinux_status.stdout }}"
+  when: selinux_status.rc == 0
+
+- name: Configure SELinux file context for rpm-ostree repository
+  community.general.sefcontext:
+    target: "{{ rpm_ostree_repo_base_path }}(/.*)?"
+    setype: httpd_sys_content_t
+    state: present
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+
+- name: Apply SELinux context to rpm-ostree repository
+  ansible.builtin.command:
+    cmd: restorecon -Rv {{ rpm_ostree_repo_base_path }}
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+  changed_when: false
+
+- name: Verify SELinux context is applied
+  ansible.builtin.command:
+    cmd: ls -Z {{ rpm_ostree_repo_path }}
+  register: selinux_context
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+  changed_when: false
+
+- name: Display SELinux context
+  ansible.builtin.debug:
+    msg: "{{ selinux_context.stdout_lines }}"
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+    - selinux_context is defined

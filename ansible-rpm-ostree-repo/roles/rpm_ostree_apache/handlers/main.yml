@@ -1,0 +1,7 @@
+---
+# Apache handlers for rpm-ostree configuration
+
+- name: Reload Apache
+  ansible.builtin.systemd:
+    name: "{{ apache_service_name }}"
+    state: reloaded

@@ -1,0 +1,28 @@
+---
+# Group variables for rpm-ostree repository servers
+# Version: 2.0.0
+# Last Updated: 2026-01-26
+
+# rpm-ostree repository configuration
+rpm_ostree_repo_base_path: /srv/ostree/rpm-ostree
+rpm_ostree_repo_name: kinoite
+rpm_ostree_repo_path: "{{ rpm_ostree_repo_base_path }}/{{ rpm_ostree_repo_name }}"
+rpm_ostree_repo_mode: archive-z2
+
+# Apache configuration
+rpm_ostree_http_alias: /repo/kinoite
+rpm_ostree_enable_https: true
+
+# SSL certificate paths (reuse from Flatpak setup)
+# If you have custom certificates, update these paths
+ssl_cert_dir: /etc/pki/tls/certs
+ssl_key_dir: /etc/pki/tls/private
+ssl_cert_file: "{{ ssl_cert_dir }}/flatpak-repo.crt"
+ssl_key_file: "{{ ssl_key_dir }}/flatpak-repo.key"
+
+# SELinux configuration
+selinux_permissive_mode: false
+
+# Note: This playbook assumes Apache is already installed and configured
+# from the Flatpak repository setup. It will reuse the same SSL certificates
+# and ports (8080 for HTTP, 8443 for HTTPS).
