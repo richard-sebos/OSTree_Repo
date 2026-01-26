@@ -1,0 +1,34 @@
+---
+# Client Scripts Deployment Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Deploy client configuration and helper scripts
+
+- name: Create client configuration script
+  ansible.builtin.template:
+    src: flatpak-configure-client.sh.j2
+    dest: /usr/local/bin/flatpak-configure-client
+    mode: '0755'
+
+- name: Copy client script to repository for HTTP access
+  ansible.builtin.copy:
+    src: /usr/local/bin/flatpak-configure-client
+    dest: "{{ flatpak_repo_path }}/flatpak-configure-client"
+    mode: '0755'
+    remote_src: yes
+
+- name: Create flatpak-repo-add helper script
+  ansible.builtin.template:
+    src: flatpak-repo-add.sh.j2
+    dest: /usr/local/bin/flatpak-repo-add
+    mode: '0755'
+
+- name: Display client configuration information
+  ansible.builtin.debug:
+    msg:
+      - "Client configuration script created at /usr/local/bin/flatpak-configure-client"
+      - "Also available via HTTP: {{ flatpak_repo_url | regex_replace('/repo$', '') }}/flatpak-configure-client"
+      - "Helper script created at /usr/local/bin/flatpak-repo-add"
+      - ""
+      - "To configure clients, run:"
+      - "  curl {{ flatpak_repo_url | regex_replace('/repo$', '') }}/flatpak-configure-client | sudo bash"

@@ -1,0 +1,5 @@
+---
+# Firewall configuration defaults
+flatpak_repo_enable_https: false
+flatpak_repo_http_port: 8080
+flatpak_repo_https_port: 8443

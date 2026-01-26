@@ -1,0 +1,24 @@
+---
+# Dependencies Installation Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Install required packages for Flatpak repository
+
+- name: Install required packages (RHEL/Fedora)
+  ansible.builtin.dnf:
+    name: "{{ required_packages.RedHat }}"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install required packages (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ required_packages.Debian }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Ensure Flathub remote is added
+  ansible.builtin.command:
+    cmd: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  changed_when: false
+  failed_when: false

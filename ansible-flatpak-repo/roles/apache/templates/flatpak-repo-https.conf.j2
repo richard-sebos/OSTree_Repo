@@ -1,0 +1,32 @@
+# Flatpak Repository HTTPS Configuration
+<VirtualHost *:{{ flatpak_repo_https_port }}>
+    ServerName {{ flatpak_repo_server_name }}
+    DocumentRoot {{ flatpak_repo_path }}
+
+    SSLEngine on
+    SSLCertificateFile {{ ssl_cert_file }}
+    SSLCertificateKeyFile {{ ssl_key_file }}
+
+    <Directory {{ flatpak_repo_path }}>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # Enable CORS for P2P distribution
+        Header set Access-Control-Allow-Origin "*"
+    </Directory>
+
+    # OSTree specific configuration
+    <Directory {{ flatpak_repo_path }}/objects>
+        Options -Indexes
+    </Directory>
+
+    ErrorLog /var/log/{{ apache_service_name }}/flatpak-repo-error.log
+    CustomLog /var/log/{{ apache_service_name }}/flatpak-repo-access.log combined
+</VirtualHost>
+
+# HTTP to HTTPS redirect
+<VirtualHost *:{{ flatpak_repo_http_port }}>
+    ServerName {{ flatpak_repo_server_name }}
+    Redirect permanent / https://{{ flatpak_repo_server_name }}:{{ flatpak_repo_https_port }}/
+</VirtualHost>

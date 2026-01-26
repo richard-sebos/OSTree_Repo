@@ -1,0 +1,14 @@
+---
+# Handlers for SSL certificates role
+
+- name: Restart httpd
+  ansible.builtin.systemd:
+    name: httpd
+    state: restarted
+  when: ansible_os_family == "RedHat"
+
+- name: Restart apache2
+  ansible.builtin.systemd:
+    name: apache2
+    state: restarted
+  when: ansible_os_family == "Debian"

@@ -1,0 +1,35 @@
+---
+# Flatpak Repository Server Variables
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+
+# Repository Configuration
+flatpak_repo_path: /var/flatpak/repo
+flatpak_repo_name: enterprise-apps
+flatpak_repo_collection_id: com.enterprise.Apps
+flatpak_repo_gpg_key_id: ""  # Set to your GPG key ID if using GPG signing
+
+# HTTP/HTTPS Configuration
+flatpak_repo_http_port: 8080
+flatpak_repo_https_port: 8443
+flatpak_repo_enable_https: true  # Set to true to enable HTTPS
+flatpak_repo_server_name: flatpak-repo.local
+flatpak_repo_url: "{{ 'https' if flatpak_repo_enable_https else 'http' }}://{{ flatpak_repo_server_name }}:{{ flatpak_repo_https_port if flatpak_repo_enable_https else flatpak_repo_http_port }}/repo"
+
+# SSL Certificate Configuration (used when HTTPS is enabled)
+ssl_cert_dir: /etc/pki/tls/certs
+ssl_key_dir: /etc/pki/tls/private
+ssl_cert_file: "{{ ssl_cert_dir }}/flatpak-repo.crt"
+ssl_key_file: "{{ ssl_key_dir }}/flatpak-repo.key"
+
+ssl_cert_country: US
+ssl_cert_state: State
+ssl_cert_locality: City
+ssl_cert_organization: Enterprise
+ssl_cert_organizational_unit: IT
+ssl_cert_common_name: "{{ flatpak_repo_server_name }}"
+ssl_cert_days_valid: 3650
+ssl_cert_key_size: 4096
+
+# SELinux Configuration
+selinux_permissive_mode: false  # Set to true for testing only

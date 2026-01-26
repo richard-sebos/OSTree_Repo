@@ -1,0 +1,12 @@
+---
+# Apache configuration
+flatpak_repo_http_port: 8080
+flatpak_repo_https_port: 8443
+flatpak_repo_enable_https: false
+flatpak_repo_server_name: flatpak-repo.local
+flatpak_repo_url: "http://{{ flatpak_repo_server_name }}/repo"
+
+# Apache service name varies by OS
+apache_service_name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+apache_config_dir: "{{ '/etc/httpd/conf.d' if ansible_os_family == 'RedHat' else '/etc/apache2/sites-available' }}"
+apache_main_config: "{{ '/etc/httpd/conf/httpd.conf' if ansible_os_family == 'RedHat' else '/etc/apache2/ports.conf' }}"

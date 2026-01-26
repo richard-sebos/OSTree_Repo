@@ -1,0 +1,57 @@
+---
+# SSL Certificate Generation Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Generate SSL certificates for HTTPS
+
+- name: Check if SSL certificates already exist
+  ansible.builtin.stat:
+    path: "{{ ssl_cert_file }}"
+  register: ssl_cert_exists
+
+- name: Create SSL certificate directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ssl_cert_dir }}"
+    - "{{ ssl_key_dir }}"
+  when: flatpak_repo_enable_https | bool
+
+- name: Generate self-signed SSL certificate
+  ansible.builtin.command:
+    cmd: >
+      openssl req -x509 -nodes -days {{ ssl_cert_days_valid }}
+      -newkey rsa:{{ ssl_cert_key_size }}
+      -keyout {{ ssl_key_file }}
+      -out {{ ssl_cert_file }}
+      -subj "/C={{ ssl_cert_country }}/ST={{ ssl_cert_state }}/L={{ ssl_cert_locality }}/O={{ ssl_cert_organization }}/OU={{ ssl_cert_organizational_unit }}/CN={{ ssl_cert_common_name }}"
+      -addext "subjectAltName={{ ssl_cert_san | join(',') }}"
+  when:
+    - flatpak_repo_enable_https | bool
+    - not ssl_cert_exists.stat.exists
+  notify: Restart httpd
+
+- name: Set permissions on SSL private key
+  ansible.builtin.file:
+    path: "{{ ssl_key_file }}"
+    mode: '0600'
+  when: flatpak_repo_enable_https | bool
+
+- name: Set permissions on SSL certificate
+  ansible.builtin.file:
+    path: "{{ ssl_cert_file }}"
+    mode: '0644'
+  when: flatpak_repo_enable_https | bool
+
+- name: Display certificate information
+  ansible.builtin.debug:
+    msg:
+      - "SSL certificate generated successfully"
+      - "Certificate: {{ ssl_cert_file }}"
+      - "Private Key: {{ ssl_key_file }}"
+      - "To trust on clients: sudo cp {{ ssl_cert_file }} /etc/pki/ca-trust/source/anchors/ && sudo update-ca-trust"
+  when:
+    - flatpak_repo_enable_https | bool
+    - not ssl_cert_exists.stat.exists

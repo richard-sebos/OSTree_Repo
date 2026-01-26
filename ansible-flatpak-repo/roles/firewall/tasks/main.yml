@@ -1,0 +1,51 @@
+---
+# Firewall Configuration Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Configure firewall for Flatpak repository
+
+- name: Debug HTTPS variable
+  ansible.builtin.debug:
+    msg: "flatpak_repo_enable_https = {{ flatpak_repo_enable_https }}"
+
+- name: Check if firewalld is installed and active
+  ansible.builtin.systemd:
+    name: firewalld
+  register: firewalld_status
+  failed_when: false
+
+- name: Open HTTP port in firewall
+  ansible.posix.firewalld:
+    port: "{{ flatpak_repo_http_port }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - firewalld_status.status is defined
+    - firewalld_status.status.ActiveState == "active"
+
+- name: Open HTTPS port in firewall
+  ansible.posix.firewalld:
+    port: "{{ flatpak_repo_https_port }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - firewalld_status.status is defined
+    - firewalld_status.status.ActiveState == "active"
+    - flatpak_repo_enable_https
+
+- name: Display firewall status
+  ansible.builtin.debug:
+    msg:
+      - "Firewall configured for port {{ flatpak_repo_http_port }}/tcp"
+      - "{{ 'HTTPS port ' + (flatpak_repo_https_port | string) + '/tcp also opened' if flatpak_repo_enable_https else 'HTTPS not enabled' }}"
+  when:
+    - firewalld_status.status is defined
+    - firewalld_status.status.ActiveState == "active"
+
+- name: Display firewall not active message
+  ansible.builtin.debug:
+    msg: "Firewalld is not active, skipping firewall configuration"
+  when:
+    - firewalld_status.status is not defined or firewalld_status.status.ActiveState != "active"

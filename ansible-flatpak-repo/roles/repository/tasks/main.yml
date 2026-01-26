@@ -1,0 +1,57 @@
+---
+# Repository Initialization Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Initialize and configure Flatpak repository
+
+- name: Create repository directory
+  ansible.builtin.file:
+    path: "{{ flatpak_repo_path }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Check if repository is already initialized
+  ansible.builtin.stat:
+    path: "{{ flatpak_repo_path }}/config"
+  register: repo_config
+
+- name: Initialize OSTree repository
+  ansible.builtin.command:
+    cmd: ostree init --mode=archive-z2 --repo={{ flatpak_repo_path }}
+  when: not repo_config.stat.exists
+
+- name: Configure collection ID for P2P distribution
+  ansible.builtin.command:
+    cmd: ostree config set --repo={{ flatpak_repo_path }} core.collection-id {{ flatpak_repo_collection_id }}
+  when: not repo_config.stat.exists
+
+- name: Configure GPG signing (if key provided)
+  ansible.builtin.command:
+    cmd: ostree config set --repo={{ flatpak_repo_path }} core.gpg-sign {{ flatpak_repo_gpg_key_id }}
+  when:
+    - flatpak_repo_gpg_key_id != ""
+    - not repo_config.stat.exists
+
+- name: Set repository permissions
+  ansible.builtin.file:
+    path: "{{ flatpak_repo_path }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+    recurse: yes
+
+- name: Generate repository summary
+  ansible.builtin.command:
+    cmd: flatpak build-update-repo {{ flatpak_repo_path }}
+  changed_when: false
+  failed_when: false
+
+- name: Display repository information
+  ansible.builtin.debug:
+    msg:
+      - "Repository initialized at {{ flatpak_repo_path }}"
+      - "Collection ID: {{ flatpak_repo_collection_id }}"
+      - "GPG signing: {{ 'Enabled' if flatpak_repo_gpg_key_id != '' else 'Disabled' }}"

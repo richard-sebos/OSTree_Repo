@@ -1,0 +1,3 @@
+---
+# SELinux configuration defaults
+selinux_permissive_mode: false  # Set to true for testing, false for production

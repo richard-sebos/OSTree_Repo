@@ -1,0 +1,88 @@
+---
+# Apache Web Server Configuration Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Configure Apache web server for Flatpak repository
+
+- name: Deploy Apache configuration (HTTP only)
+  ansible.builtin.template:
+    src: flatpak-repo-http.conf.j2
+    dest: "{{ apache_config_dir }}/flatpak-repo.conf"
+    mode: '0644'
+  when: not (flatpak_repo_enable_https | bool)
+  notify: Restart {{ apache_service_name }}
+
+- name: Deploy Apache configuration (HTTPS)
+  ansible.builtin.template:
+    src: flatpak-repo-https.conf.j2
+    dest: "{{ apache_config_dir }}/flatpak-repo.conf"
+    mode: '0644'
+  when: flatpak_repo_enable_https | bool
+  notify: Restart {{ apache_service_name }}
+
+- name: Create symlink for clean URL access
+  ansible.builtin.file:
+    src: "{{ flatpak_repo_path }}"
+    dest: /var/www/html/repo
+    state: link
+    force: yes
+
+- name: Remove any existing Listen directives for our ports (cleanup)
+  ansible.builtin.lineinfile:
+    path: "{{ apache_main_config }}"
+    regexp: "^Listen {{ item }}$"
+    state: absent
+  loop:
+    - "{{ flatpak_repo_http_port }}"
+    - "{{ flatpak_repo_https_port }}"
+
+- name: Add Listen directive for HTTP port
+  ansible.builtin.lineinfile:
+    path: "{{ apache_main_config }}"
+    line: "Listen {{ flatpak_repo_http_port }}"
+    state: present
+  notify: Restart {{ apache_service_name }}
+
+- name: Add Listen directive for HTTPS port
+  ansible.builtin.lineinfile:
+    path: "{{ apache_main_config }}"
+    line: "Listen {{ flatpak_repo_https_port }}"
+    state: present
+  when: flatpak_repo_enable_https | bool
+  notify: Restart {{ apache_service_name }}
+
+- name: Enable site (Debian/Ubuntu)
+  ansible.builtin.command:
+    cmd: a2ensite flatpak-repo
+  when: ansible_os_family == "Debian"
+  notify: Restart apache2
+  changed_when: false
+
+- name: Enable required Apache modules (Debian/Ubuntu)
+  ansible.builtin.command:
+    cmd: "a2enmod {{ item }}"
+  loop:
+    - headers
+    - ssl
+  when:
+    - ansible_os_family == "Debian"
+    - flatpak_repo_enable_https | bool
+  notify: Restart apache2
+  changed_when: false
+
+- name: Enable and start Apache service
+  ansible.builtin.systemd:
+    name: "{{ apache_service_name }}"
+    state: started
+    enabled: yes
+
+- name: Test Apache configuration
+  ansible.builtin.command:
+    cmd: "{{ 'apachectl' if ansible_os_family == 'RedHat' else 'apache2ctl' }} configtest"
+  register: apache_config_test
+  changed_when: false
+  failed_when: false
+
+- name: Display Apache configuration test results
+  ansible.builtin.debug:
+    msg: "Apache configuration test: {{ apache_config_test.stderr | default('OK') }}"

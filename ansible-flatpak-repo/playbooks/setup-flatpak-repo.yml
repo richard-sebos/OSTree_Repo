@@ -1,0 +1,51 @@
+---
+# Flatpak Repository Setup Playbook
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Usage: ansible-playbook -i inventory/hosts playbooks/setup-flatpak-repo.yml
+
+- name: Setup Flatpak Repository Server
+  hosts: flatpak_repo_servers
+  become: yes
+
+  roles:
+    - role: dependencies
+      tags: [dependencies, setup]
+
+    - role: ssl_certificates
+      tags: [ssl, https, setup]
+      when: flatpak_repo_enable_https | default(false) | bool
+
+    - role: repository
+      tags: [repository, setup]
+
+    - role: apache
+      tags: [apache, web, setup]
+
+    - role: selinux
+      tags: [selinux, security, setup]
+
+    - role: firewall
+      tags: [firewall, security, setup]
+
+    - role: client_scripts
+      tags: [scripts, setup]
+
+  post_tasks:
+    - name: Display setup completion message
+      ansible.builtin.debug:
+        msg:
+          - "========================================"
+          - "Flatpak Repository Setup Complete!"
+          - "========================================"
+          - "Repository Path: {{ flatpak_repo_path }}"
+          - "Repository URL: {{ flatpak_repo_url }}"
+          - "HTTP Port: {{ flatpak_repo_http_port }}"
+          - "{% if flatpak_repo_enable_https %}HTTPS Port: {{ flatpak_repo_https_port }}{% endif %}"
+          - "{% if flatpak_repo_enable_https %}HTTPS Enabled: YES{% else %}HTTPS Enabled: NO{% endif %}"
+          - ""
+          - "Next Steps:"
+          - "1. Add applications: sudo flatpak-repo-add org.mozilla.firefox"
+          - "2. Configure clients: curl http://{{ ansible_default_ipv4.address }}:{{ flatpak_repo_http_port }}/flatpak-configure-client | sudo bash"
+          - "{% if flatpak_repo_enable_https %}3. Distribute SSL certificate to clients: {{ ssl_cert_file }}{% endif %}"
+      tags: [always]

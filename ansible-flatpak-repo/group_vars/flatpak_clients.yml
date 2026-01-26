@@ -1,0 +1,8 @@
+---
+# Variables for Flatpak client workstations
+
+flatpak_repo_name: enterprise-apps
+flatpak_repo_server: flatpak-repo.local
+flatpak_repo_port: 8080
+flatpak_repo_use_https: false
+flatpak_repo_url: "{{ 'https' if flatpak_repo_use_https else 'http' }}://{{ flatpak_repo_server }}:{{ flatpak_repo_port }}/repo"

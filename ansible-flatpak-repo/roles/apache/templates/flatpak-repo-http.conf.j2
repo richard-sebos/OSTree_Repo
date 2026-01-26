@@ -1,0 +1,22 @@
+# Flatpak Repository HTTP Configuration
+<VirtualHost *:{{ flatpak_repo_http_port }}>
+    ServerName {{ flatpak_repo_server_name }}
+    DocumentRoot {{ flatpak_repo_path }}
+
+    <Directory {{ flatpak_repo_path }}>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # Enable CORS for P2P distribution
+        Header set Access-Control-Allow-Origin "*"
+    </Directory>
+
+    # OSTree specific configuration
+    <Directory {{ flatpak_repo_path }}/objects>
+        Options -Indexes
+    </Directory>
+
+    ErrorLog /var/log/{{ apache_service_name }}/flatpak-repo-error.log
+    CustomLog /var/log/{{ apache_service_name }}/flatpak-repo-access.log combined
+</VirtualHost>

@@ -1,0 +1,8 @@
+[flatpak_repo_servers]
+localhost ansible_connection=local
+
+[flatpak_clients]
+# Add your Kinoite client machines here
+# Example:
+# client1.example.com
+# client2.example.com

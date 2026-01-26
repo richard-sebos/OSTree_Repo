@@ -1,0 +1,20 @@
+---
+# SSL certificate configuration
+ssl_cert_dir: /etc/pki/tls/certs
+ssl_key_dir: /etc/pki/tls/private
+ssl_cert_file: "{{ ssl_cert_dir }}/flatpak-repo.crt"
+ssl_key_file: "{{ ssl_key_dir }}/flatpak-repo.key"
+
+ssl_cert_country: US
+ssl_cert_state: State
+ssl_cert_locality: City
+ssl_cert_organization: Enterprise
+ssl_cert_organizational_unit: IT
+ssl_cert_common_name: flatpak-repo.local
+ssl_cert_days_valid: 3650
+ssl_cert_key_size: 4096
+
+# Subject Alternative Names
+ssl_cert_san:
+  - "DNS:flatpak-repo.local"
+  - "IP:{{ ansible_default_ipv4.address }}"

@@ -1,0 +1,6 @@
+---
+# Repository configuration
+flatpak_repo_path: /var/flatpak/repo
+flatpak_repo_name: enterprise-apps
+flatpak_repo_collection_id: com.enterprise.Apps
+flatpak_repo_gpg_key_id: ""

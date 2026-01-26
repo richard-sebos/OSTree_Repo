@@ -1,0 +1,53 @@
+---
+# SELinux Configuration Role
+# Version: 1.0.0
+# Last Updated: 2026-01-24
+# Purpose: Configure SELinux for Apache access to Flatpak repository
+
+- name: Check if SELinux is enabled
+  ansible.builtin.command:
+    cmd: getenforce
+  register: selinux_status
+  changed_when: false
+  failed_when: false
+
+- name: Set SELinux to permissive mode if enforcing (for testing)
+  ansible.builtin.selinux:
+    policy: targeted
+    state: permissive
+  when:
+    - selinux_status.stdout == "Enforcing"
+    - selinux_permissive_mode | default(false) | bool
+  register: selinux_mode_changed
+
+- name: Display SELinux status
+  ansible.builtin.debug:
+    msg: "SELinux status: {{ selinux_status.stdout }}"
+  when: selinux_status.rc == 0
+
+- name: Configure SELinux file context for repository
+  community.general.sefcontext:
+    target: "{{ flatpak_repo_path }}(/.*)?"
+    setype: httpd_sys_content_t
+    state: present
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+
+- name: Apply SELinux context to repository
+  ansible.builtin.command:
+    cmd: restorecon -Rv {{ flatpak_repo_path }}
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+  changed_when: false
+
+- name: Enable httpd_can_network_connect (if needed)
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  when:
+    - selinux_status.stdout != "Disabled"
+    - selinux_status.rc == 0
+    - flatpak_repo_enable_https | default(false) | bool

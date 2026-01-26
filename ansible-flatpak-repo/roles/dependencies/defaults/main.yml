@@ -1,0 +1,14 @@
+---
+# Default variables for dependencies role
+required_packages:
+  RedHat:
+    - flatpak
+    - ostree
+    - httpd
+    - policycoreutils-python-utils
+    - mod_ssl
+  Debian:
+    - flatpak
+    - ostree
+    - apache2
+    - policycoreutils-python-utils
