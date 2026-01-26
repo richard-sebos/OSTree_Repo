@@ -13,6 +13,10 @@ rpm_ostree_repo_mode: archive-z2
 rpm_ostree_http_alias: /repo/kinoite
 rpm_ostree_enable_https: true
 
+# Port configuration (match your Flatpak setup)
+flatpak_repo_http_port: 8080
+flatpak_repo_https_port: 8453
+
 # SSL certificate paths (reuse from Flatpak setup)
 # If you have custom certificates, update these paths
 ssl_cert_dir: /etc/pki/tls/certs
