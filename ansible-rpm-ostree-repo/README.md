@@ -5,10 +5,11 @@ This playbook extends your existing Flatpak OSTree server infrastructure to supp
 ## Prerequisites
 
 1. **Apache must already be installed and running** (from your Flatpak repo setup)
-2. **Required packages on the server:**
-   - `ostree`
-   - `rpm-ostree`
-   - `httpd` (Apache)
+2. **SSL certificates must exist** (if using HTTPS - enabled by default)
+   - `/etc/pki/tls/certs/flatpak-repo.crt`
+   - `/etc/pki/tls/private/flatpak-repo.key`
+
+**Note:** The playbook will automatically install `ostree` and `rpm-ostree` packages if they're not already present.
 
 ## Directory Structure
 

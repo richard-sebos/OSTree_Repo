@@ -19,11 +19,10 @@ Use this checklist to ensure a successful rpm-ostree repository deployment.
 
 - [ ] Operating System: RHEL/Fedora/CentOS (or Debian/Ubuntu with modifications)
 - [ ] Free disk space in `/srv` (at least 50GB recommended)
-- [ ] Packages installed on server:
-  - [ ] `ostree`
-  - [ ] `rpm-ostree`
-  - [ ] `httpd` (Apache)
-  - [ ] SELinux tools (`policycoreutils-python-utils`)
+- [ ] Apache (`httpd`) must be installed and running (from Flatpak setup)
+- [ ] SELinux tools installed (`policycoreutils-python-utils`)
+
+**Note:** The playbook will automatically install `ostree` and `rpm-ostree` if needed.
 
 ### ✅ Network Requirements
 

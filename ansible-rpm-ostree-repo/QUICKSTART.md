@@ -9,6 +9,8 @@ cd ansible-rpm-ostree-repo
 ansible-galaxy collection install -r requirements.yml
 ```
 
+**Note:** The playbook will automatically install `ostree` and `rpm-ostree` on the server if needed.
+
 ## Step 2: Configure Your Server
 
 Edit `inventory/hosts.yml` and replace with your server details:

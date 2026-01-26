@@ -21,6 +21,11 @@ The ansible-rpm-ostree-repo playbook now has **HTTPS enabled by default**!
 - And: `/etc/pki/tls/private/flatpak-repo.key`
 - Same certificates as your Flatpak repository
 
+✅ **Automatic Package Installation**
+- Playbook now automatically installs `ostree` and `rpm-ostree`
+- No need to manually install these packages first
+- One less prerequisite to worry about!
+
 ## Quick Start with HTTPS
 
 ### 1. Verify Prerequisites

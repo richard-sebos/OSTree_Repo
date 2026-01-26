@@ -1,30 +1,22 @@
 ---
 # rpm-ostree Repository Setup Playbook
-# Version: 1.0.0
-# Last Updated: 2026-01-25
+# Version: 2.0.0
+# Last Updated: 2026-01-26
 # Usage: ansible-playbook -i inventory/hosts.yml playbooks/setup-rpm-ostree-repo.yml
 #
 # Prerequisites:
 #   - Apache must already be installed and running (from Flatpak repo setup)
-#   - Server must have ostree and rpm-ostree packages installed
+#   - SSL certificates must exist (if HTTPS enabled)
+#
+# This playbook will automatically install:
+#   - ostree
+#   - rpm-ostree
 
 - name: Setup rpm-ostree Repository Server
   hosts: rpm_ostree_repo_servers
   become: yes
 
   pre_tasks:
-    - name: Check for required packages
-      ansible.builtin.package_facts:
-        manager: auto
-
-    - name: Verify rpm-ostree is installed
-      ansible.builtin.assert:
-        that:
-          - "'rpm-ostree' in ansible_facts.packages or 'rpm-ostree' in ansible_facts.packages.keys()"
-        fail_msg: "rpm-ostree package is not installed. Please install it first."
-        success_msg: "rpm-ostree is installed"
-      ignore_errors: yes
-
     - name: Display setup information
       ansible.builtin.debug:
         msg:
@@ -33,6 +25,19 @@
           - "========================================"
           - "This will extend your existing Apache server"
           - "to serve rpm-ostree content for Kinoite"
+
+    - name: Install required packages
+      ansible.builtin.package:
+        name:
+          - ostree
+          - rpm-ostree
+        state: present
+      register: package_install
+
+    - name: Display package installation result
+      ansible.builtin.debug:
+        msg: "Required packages installed successfully"
+      when: package_install.changed
 
   roles:
     - role: rpm_ostree_repo
