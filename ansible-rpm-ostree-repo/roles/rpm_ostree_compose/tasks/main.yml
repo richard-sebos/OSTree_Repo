@@ -1,0 +1,180 @@
+---
+# rpm-ostree Compose Role
+# Version: 2.0.0
+# Last Updated: 2026-01-26
+# Purpose: Deploy treefile and optionally compose rpm-ostree images for dev and prod
+
+- name: Create treefile directory
+  ansible.builtin.file:
+    path: "{{ rpm_ostree_treefile_path }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Deploy dev treefile template
+  ansible.builtin.template:
+    src: kinoite.json.j2
+    dest: "{{ rpm_ostree_treefile_path }}/kinoite-dev.json"
+    mode: '0644'
+    owner: root
+    group: root
+  vars:
+    rpm_ostree_ref: "{{ rpm_ostree_ref_dev }}"
+  register: treefile_dev_deployed
+
+- name: Deploy prod treefile template
+  ansible.builtin.template:
+    src: kinoite.json.j2
+    dest: "{{ rpm_ostree_treefile_path }}/kinoite-prod.json"
+    mode: '0644'
+    owner: root
+    group: root
+  vars:
+    rpm_ostree_ref: "{{ rpm_ostree_ref_prod }}"
+  register: treefile_prod_deployed
+
+- name: Display treefile locations
+  ansible.builtin.debug:
+    msg:
+      - "Treefiles deployed:"
+      - "  DEV:  {{ rpm_ostree_treefile_path }}/kinoite-dev.json (ref: {{ rpm_ostree_ref_dev }})"
+      - "  PROD: {{ rpm_ostree_treefile_path }}/kinoite-prod.json (ref: {{ rpm_ostree_ref_prod }})"
+
+- name: Check if image composition is enabled
+  ansible.builtin.debug:
+    msg: "Image composition will be performed for: {{ rpm_ostree_compose_environments | join(', ') }}"
+  when: rpm_ostree_compose_on_setup | bool
+
+- name: Compose dev rpm-ostree image
+  ansible.builtin.command:
+    cmd: >
+      rpm-ostree compose tree
+      --repo={{ rpm_ostree_repo_dev_path }}
+      {{ rpm_ostree_treefile_path }}/kinoite-dev.json
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'dev' in rpm_ostree_compose_environments"
+  register: compose_dev_result
+  async: 3600  # 1 hour timeout
+  poll: 30     # Check every 30 seconds
+  changed_when: true
+
+- name: Compose prod rpm-ostree image
+  ansible.builtin.command:
+    cmd: >
+      rpm-ostree compose tree
+      --repo={{ rpm_ostree_repo_prod_path }}
+      {{ rpm_ostree_treefile_path }}/kinoite-prod.json
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'prod' in rpm_ostree_compose_environments"
+  register: compose_prod_result
+  async: 3600  # 1 hour timeout
+  poll: 30     # Check every 30 seconds
+  changed_when: true
+
+- name: Display dev compose result
+  ansible.builtin.debug:
+    msg: "DEV image composition completed successfully"
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'dev' in rpm_ostree_compose_environments"
+    - compose_dev_result is defined
+    - compose_dev_result.rc == 0
+
+- name: Display prod compose result
+  ansible.builtin.debug:
+    msg: "PROD image composition completed successfully"
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'prod' in rpm_ostree_compose_environments"
+    - compose_prod_result is defined
+    - compose_prod_result.rc == 0
+
+- name: Update dev repository summary
+  ansible.builtin.command:
+    cmd: ostree summary -u --repo={{ rpm_ostree_repo_dev_path }}
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'dev' in rpm_ostree_compose_environments"
+    - compose_dev_result is defined
+    - compose_dev_result.rc == 0
+  changed_when: true
+
+- name: Update prod repository summary
+  ansible.builtin.command:
+    cmd: ostree summary -u --repo={{ rpm_ostree_repo_prod_path }}
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'prod' in rpm_ostree_compose_environments"
+    - compose_prod_result is defined
+    - compose_prod_result.rc == 0
+  changed_when: true
+
+- name: Verify dev composed image
+  ansible.builtin.command:
+    cmd: ostree refs --repo={{ rpm_ostree_repo_dev_path }}
+  register: ostree_refs_dev
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'dev' in rpm_ostree_compose_environments"
+    - compose_dev_result is defined
+    - compose_dev_result.rc == 0
+  changed_when: false
+
+- name: Verify prod composed image
+  ansible.builtin.command:
+    cmd: ostree refs --repo={{ rpm_ostree_repo_prod_path }}
+  register: ostree_refs_prod
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'prod' in rpm_ostree_compose_environments"
+    - compose_prod_result is defined
+    - compose_prod_result.rc == 0
+  changed_when: false
+
+- name: Display available dev refs
+  ansible.builtin.debug:
+    msg:
+      - "Available OSTree refs in DEV repository:"
+      - "{{ ostree_refs_dev.stdout_lines }}"
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'dev' in rpm_ostree_compose_environments"
+    - ostree_refs_dev is defined
+
+- name: Display available prod refs
+  ansible.builtin.debug:
+    msg:
+      - "Available OSTree refs in PROD repository:"
+      - "{{ ostree_refs_prod.stdout_lines }}"
+  when:
+    - rpm_ostree_compose_on_setup | bool
+    - "'prod' in rpm_ostree_compose_environments"
+    - ostree_refs_prod is defined
+
+- name: Display manual compose instructions
+  ansible.builtin.debug:
+    msg:
+      - "=========================================="
+      - "Image composition was NOT performed automatically"
+      - "=========================================="
+      - "To compose images manually:"
+      - ""
+      - "DEV:"
+      - "  sudo rpm-ostree compose tree \\"
+      - "    --repo={{ rpm_ostree_repo_dev_path }} \\"
+      - "    {{ rpm_ostree_treefile_path }}/kinoite-dev.json"
+      - "  sudo ostree summary -u --repo={{ rpm_ostree_repo_dev_path }}"
+      - ""
+      - "PROD:"
+      - "  sudo rpm-ostree compose tree \\"
+      - "    --repo={{ rpm_ostree_repo_prod_path }} \\"
+      - "    {{ rpm_ostree_treefile_path }}/kinoite-prod.json"
+      - "  sudo ostree summary -u --repo={{ rpm_ostree_repo_prod_path }}"
+      - ""
+      - "To enable automatic composition, set in group_vars:"
+      - "  rpm_ostree_compose_on_setup: true"
+      - "  rpm_ostree_compose_environments: [dev, prod]"
+  when: not (rpm_ostree_compose_on_setup | bool)

@@ -52,6 +52,9 @@
     - role: rpm_ostree_firewall
       tags: [firewall, security, setup]
 
+    - role: rpm_ostree_compose
+      tags: [compose, image, setup]
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:

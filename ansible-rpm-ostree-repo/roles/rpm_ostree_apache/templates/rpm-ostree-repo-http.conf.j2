@@ -1,9 +1,10 @@
-# rpm-ostree Repository Configuration
-# Extends existing Apache configuration to serve Kinoite images
+# rpm-ostree Repository HTTP Configuration
+# Extends existing Apache HTTP configuration with rpm-ostree endpoints
 
-Alias {{ rpm_ostree_http_alias }} {{ rpm_ostree_repo_path }}
+# rpm-ostree dev repository alias
+Alias {{ rpm_ostree_http_alias_dev }} {{ rpm_ostree_repo_dev_path }}
 
-<Directory {{ rpm_ostree_repo_path }}>
+<Directory {{ rpm_ostree_repo_dev_path }}>
     Options Indexes FollowSymLinks
     AllowOverride None
     Require all granted
@@ -12,7 +13,24 @@ Alias {{ rpm_ostree_http_alias }} {{ rpm_ostree_repo_path }}
     Header set Access-Control-Allow-Origin "*"
 </Directory>
 
-# Disable directory listing for objects directory
-<Directory {{ rpm_ostree_repo_path }}/objects>
+# Disable directory listing for dev objects directory
+<Directory {{ rpm_ostree_repo_dev_path }}/objects>
+    Options -Indexes
+</Directory>
+
+# rpm-ostree prod repository alias
+Alias {{ rpm_ostree_http_alias_prod }} {{ rpm_ostree_repo_prod_path }}
+
+<Directory {{ rpm_ostree_repo_prod_path }}>
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+
+    # Enable CORS for OSTree client access
+    Header set Access-Control-Allow-Origin "*"
+</Directory>
+
+# Disable directory listing for prod objects directory
+<Directory {{ rpm_ostree_repo_prod_path }}/objects>
     Options -Indexes
 </Directory>

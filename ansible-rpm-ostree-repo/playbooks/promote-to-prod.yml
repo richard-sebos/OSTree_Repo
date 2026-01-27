@@ -1,0 +1,124 @@
+---
+# rpm-ostree Image Promotion Playbook
+# Version: 1.0.0
+# Last Updated: 2026-01-26
+# Usage: ansible-playbook -i inventory/hosts.yml playbooks/promote-to-prod.yml
+#
+# Purpose: Promote tested images from dev to production
+
+- name: Promote rpm-ostree Images from Dev to Prod
+  hosts: rpm_ostree_repo_servers
+  become: yes
+
+  vars:
+    promotion_ref: "{{ rpm_ostree_ref_dev }}"
+    production_ref: "{{ rpm_ostree_ref_prod }}"
+
+  pre_tasks:
+    - name: Display promotion information
+      ansible.builtin.debug:
+        msg:
+          - "========================================"
+          - "rpm-ostree Image Promotion"
+          - "========================================"
+          - "This will promote the latest image from DEV to PROD"
+          - ""
+          - "Source (DEV):       {{ rpm_ostree_repo_dev_path }}"
+          - "Destination (PROD): {{ rpm_ostree_repo_prod_path }}"
+          - ""
+          - "Dev ref:  {{ promotion_ref }}"
+          - "Prod ref: {{ production_ref }}"
+
+    - name: Verify dev repository exists
+      ansible.builtin.stat:
+        path: "{{ rpm_ostree_repo_dev_path }}/config"
+      register: dev_repo_check
+      failed_when: not dev_repo_check.stat.exists
+
+    - name: Verify prod repository exists
+      ansible.builtin.stat:
+        path: "{{ rpm_ostree_repo_prod_path }}/config"
+      register: prod_repo_check
+      failed_when: not prod_repo_check.stat.exists
+
+    - name: Check for commits in dev repository
+      ansible.builtin.command:
+        cmd: ostree refs --repo={{ rpm_ostree_repo_dev_path }}
+      register: dev_refs
+      changed_when: false
+      failed_when: dev_refs.stdout_lines | length == 0
+
+    - name: Display dev repository refs
+      ansible.builtin.debug:
+        msg:
+          - "Dev repository contains:"
+          - "{{ dev_refs.stdout_lines }}"
+
+  tasks:
+    - name: Get latest commit from dev
+      ansible.builtin.command:
+        cmd: ostree rev-parse --repo={{ rpm_ostree_repo_dev_path }} {{ promotion_ref }}
+      register: dev_commit
+      changed_when: false
+
+    - name: Display commit to be promoted
+      ansible.builtin.debug:
+        msg:
+          - "Promoting commit: {{ dev_commit.stdout }}"
+          - "From: {{ promotion_ref }}"
+          - "To:   {{ production_ref }}"
+
+    - name: Pull commit from dev to prod using ostree pull-local
+      ansible.builtin.command:
+        cmd: >
+          ostree pull-local
+          --repo={{ rpm_ostree_repo_prod_path }}
+          {{ rpm_ostree_repo_dev_path }}
+          {{ promotion_ref }}
+      register: pull_result
+      changed_when: true
+
+    - name: Create production ref pointing to promoted commit
+      ansible.builtin.command:
+        cmd: >
+          ostree refs
+          --repo={{ rpm_ostree_repo_prod_path }}
+          --create={{ production_ref }}
+          {{ dev_commit.stdout }}
+      changed_when: true
+
+    - name: Update production repository summary
+      ansible.builtin.command:
+        cmd: ostree summary -u --repo={{ rpm_ostree_repo_prod_path }}
+      changed_when: true
+
+    - name: Verify production refs
+      ansible.builtin.command:
+        cmd: ostree refs --repo={{ rpm_ostree_repo_prod_path }}
+      register: prod_refs
+      changed_when: false
+
+    - name: Get promoted commit details
+      ansible.builtin.command:
+        cmd: ostree show --repo={{ rpm_ostree_repo_prod_path }} {{ production_ref }}
+      register: commit_details
+      changed_when: false
+
+  post_tasks:
+    - name: Display promotion completion
+      ansible.builtin.debug:
+        msg:
+          - "========================================"
+          - "Promotion Complete!"
+          - "========================================"
+          - "Promoted commit: {{ dev_commit.stdout }}"
+          - ""
+          - "Production repository now contains:"
+          - "{{ prod_refs.stdout_lines }}"
+          - ""
+          - "Clients can now pull from:"
+          - "  https://{{ ansible_default_ipv4.address }}:8443/repo/kinoite/prod"
+          - ""
+          - "To deploy on clients:"
+          - "  sudo rpm-ostree rebase kinoite-prod:{{ production_ref }}"
+          - "  sudo systemctl reboot"

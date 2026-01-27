@@ -1,16 +1,26 @@
 ---
 # Group variables for rpm-ostree repository servers
-# Version: 2.0.0
+# Version: 3.0.0
 # Last Updated: 2026-01-26
+
+# Multi-environment support (dev and prod)
+rpm_ostree_environments:
+  - name: dev
+    enabled: true
+  - name: prod
+    enabled: true
 
 # rpm-ostree repository configuration
 rpm_ostree_repo_base_path: /srv/ostree/rpm-ostree
-rpm_ostree_repo_name: kinoite
-rpm_ostree_repo_path: "{{ rpm_ostree_repo_base_path }}/{{ rpm_ostree_repo_name }}"
 rpm_ostree_repo_mode: archive-z2
 
+# Individual repository paths (auto-generated)
+rpm_ostree_repo_dev_path: "{{ rpm_ostree_repo_base_path }}/dev"
+rpm_ostree_repo_prod_path: "{{ rpm_ostree_repo_base_path }}/prod"
+
 # Apache configuration
-rpm_ostree_http_alias: /repo/kinoite
+rpm_ostree_http_alias_dev: /repo/kinoite/dev
+rpm_ostree_http_alias_prod: /repo/kinoite/prod
 rpm_ostree_enable_https: true
 
 # Port configuration (match your Flatpak setup)
@@ -32,5 +42,28 @@ selinux_permissive_mode: false
 # and ports (8080 for HTTP, 8443 for HTTPS).
 #
 # Both Flatpak and rpm-ostree repositories are served on the same ports:
-#   https://server:8443/repo/flatpak   (Flatpak)
-#   https://server:8443/repo/kinoite   (rpm-ostree)
+#   https://server:8443/repo/flatpak         (Flatpak)
+#   https://server:8443/repo/kinoite/dev     (rpm-ostree dev)
+#   https://server:8443/repo/kinoite/prod    (rpm-ostree prod)
+
+# Image composition configuration
+rpm_ostree_compose_on_setup: false  # Set to true to compose images during setup
+rpm_ostree_compose_environments:    # Which environments to compose
+  - dev
+# - prod  # Uncomment to also compose prod during setup
+
+# OSTree ref configuration
+rpm_ostree_ref_dev: fedora/x86_64/kinoite/dev
+rpm_ostree_ref_prod: fedora/x86_64/kinoite/stable
+rpm_ostree_fedora_release: 41
+
+# Customize packages (optional - these are defaults)
+# rpm_ostree_additional_packages:
+#   - vim-enhanced
+#   - git
+#   - wget
+#   - curl
+#   - htop
+#   - tmux
+#   - firefox
+#   - thunderbird

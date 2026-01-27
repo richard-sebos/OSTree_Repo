@@ -98,23 +98,54 @@ ssl_key_file: /etc/pki/tls/private/flatpak-repo.key
 
 ## Next Steps: Composing Your First Image
 
-### 1. Create a Treefile
+The playbook includes automated image composition capabilities!
 
-Create a `kinoite.json` file on your server. See `examples/kinoite.json` for a template.
+### Option 1: Automatic Composition (Recommended for Production)
 
-### 2. Compose the Image
+Enable automatic composition in `group_vars/rpm_ostree_repo_servers.yml`:
+
+```yaml
+rpm_ostree_compose_on_setup: true
+```
+
+Then run the playbook:
+
+```bash
+ansible-playbook -i inventory/hosts.yml playbooks/setup-rpm-ostree-repo.yml
+```
+
+The playbook will automatically:
+- Deploy a customizable treefile
+- Compose the Kinoite image
+- Update the repository summary
+
+### Option 2: Manual Composition (Default)
+
+By default, the playbook deploys the treefile but doesn't compose automatically.
+
+Compose manually on the server:
 
 ```bash
 sudo rpm-ostree compose tree \
   --repo=/srv/ostree/rpm-ostree/kinoite \
-  kinoite.json
-```
+  /etc/rpm-ostree/treefiles/kinoite.json
 
-### 3. Update Repository Summary
-
-```bash
 sudo ostree summary -u --repo=/srv/ostree/rpm-ostree/kinoite
 ```
+
+### Customize Packages
+
+Add your packages to `group_vars/rpm_ostree_repo_servers.yml`:
+
+```yaml
+rpm_ostree_additional_packages:
+  - firefox
+  - thunderbird
+  - libreoffice
+  - vim-enhanced
+```
+
+**See `COMPOSE_GUIDE.md` for complete documentation on image composition.**
 
 ### 4. Configure Kinoite Clients
 

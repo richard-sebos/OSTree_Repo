@@ -57,19 +57,28 @@ You should see the OSTree repository config file!
 
 ## Step 5: Create Your First Image
 
-### On the server:
+### Automatic Composition (Easy Way):
 
-1. Copy the example treefile:
-```bash
-scp examples/kinoite.json your-server:/root/
-```
+1. Enable composition in `group_vars/rpm_ostree_repo_servers.yml`:
+   ```yaml
+   rpm_ostree_compose_on_setup: true
+   ```
 
-2. SSH to the server and compose:
+2. Run the playbook:
+   ```bash
+   ansible-playbook playbooks/setup-rpm-ostree-repo.yml
+   ```
+
+   It will automatically compose the image (takes 15-30 minutes).
+
+### Manual Composition (Traditional Way):
+
+SSH to the server and compose:
 ```bash
 ssh your-server
 sudo rpm-ostree compose tree \
   --repo=/srv/ostree/rpm-ostree/kinoite \
-  /root/kinoite.json
+  /etc/rpm-ostree/treefiles/kinoite.json
 
 sudo ostree summary -u --repo=/srv/ostree/rpm-ostree/kinoite
 ```

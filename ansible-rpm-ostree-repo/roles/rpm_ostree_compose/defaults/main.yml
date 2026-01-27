@@ -1,0 +1,60 @@
+---
+# rpm-ostree Compose Configuration
+# Version: 1.0.0
+# Last Updated: 2026-01-26
+
+# Treefile configuration
+rpm_ostree_treefile_name: kinoite.json
+rpm_ostree_treefile_path: /etc/rpm-ostree/treefiles
+rpm_ostree_treefile_full_path: "{{ rpm_ostree_treefile_path }}/{{ rpm_ostree_treefile_name }}"
+
+# Compose configuration
+rpm_ostree_compose_on_setup: false  # Set to true to compose image during initial setup
+rpm_ostree_ref: fedora/x86_64/kinoite/stable
+
+# Fedora repositories
+rpm_ostree_fedora_release: 41  # Fedora version
+
+# Base packages (minimal Kinoite system)
+rpm_ostree_base_packages:
+  - fedora-release-kinoite
+  - kernel
+  - systemd
+  - rpm-ostree
+  - dracut-config-generic
+  - nss-altfiles
+  - sssd-client
+
+# Desktop packages (KDE Plasma)
+rpm_ostree_desktop_packages:
+  - plasma-desktop
+  - plasma-workspace
+  - sddm
+  - sddm-breeze
+  - dolphin
+  - konsole
+  - kate
+
+# Network and system packages
+rpm_ostree_system_packages:
+  - NetworkManager
+  - firewalld
+  - chrony
+
+# Additional packages (customize this list)
+rpm_ostree_additional_packages:
+  - vim-enhanced
+  - git
+  - wget
+  - curl
+  - htop
+  - tmux
+
+# Packages to exclude
+rpm_ostree_exclude_packages:
+  - PackageKit
+
+# Post-processing commands
+rpm_ostree_postprocess_commands:
+  - ln -sf /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.target
+  - systemctl enable sddm.service

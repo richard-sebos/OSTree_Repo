@@ -1,0 +1,52 @@
+{
+  "ref": "{{ rpm_ostree_ref }}",
+  "repos": ["fedora", "fedora-updates"],
+  "selinux": true,
+  "documentation": false,
+  "boot-location": "new",
+  "tmp-is-dir": true,
+  "recommends": false,
+
+  "packages": [
+{% for package in rpm_ostree_base_packages %}
+    "{{ package }}"{{ "," if not loop.last else "" }}
+{% endfor %}{{ "," if rpm_ostree_desktop_packages or rpm_ostree_system_packages or rpm_ostree_additional_packages else "" }}
+
+{% if rpm_ostree_desktop_packages %}
+{% for package in rpm_ostree_desktop_packages %}
+    "{{ package }}"{{ "," if not loop.last else "" }}
+{% endfor %}{{ "," if rpm_ostree_system_packages or rpm_ostree_additional_packages else "" }}
+
+{% endif %}
+{% if rpm_ostree_system_packages %}
+{% for package in rpm_ostree_system_packages %}
+    "{{ package }}"{{ "," if not loop.last else "" }}
+{% endfor %}{{ "," if rpm_ostree_additional_packages else "" }}
+
+{% endif %}
+{% if rpm_ostree_additional_packages %}
+{% for package in rpm_ostree_additional_packages %}
+    "{{ package }}"{{ "," if not loop.last else "" }}
+{% endfor %}
+{% endif %}
+  ],
+
+  "packages-x86_64": [
+    "grub2-efi-x64",
+    "shim-x64"
+  ],
+
+{% if rpm_ostree_exclude_packages %}
+  "exclude-packages": [
+{% for package in rpm_ostree_exclude_packages %}
+    "{{ package }}"{{ "," if not loop.last else "" }}
+{% endfor %}
+  ],
+
+{% endif %}
+  "postprocess": [
+{% for command in rpm_ostree_postprocess_commands %}
+    "{{ command }}"{{ "," if not loop.last else "" }}
+{% endfor %}
+  ]
+}
