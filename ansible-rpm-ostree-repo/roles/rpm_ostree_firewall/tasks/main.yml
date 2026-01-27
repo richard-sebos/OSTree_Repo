@@ -10,9 +10,19 @@
   register: firewalld_status
   failed_when: false
 
+- name: Open HTTP port in firewall
+  ansible.posix.firewalld:
+    port: "{{ flatpak_repo_http_port | default('8080') }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - firewalld_status.status is defined
+    - firewalld_status.status.ActiveState == "active"
+
 - name: Open HTTPS port in firewall
   ansible.posix.firewalld:
-    port: "{{ flatpak_repo_https_port }}/tcp"
+    port: "{{ flatpak_repo_https_port | default('8453') }}/tcp"
     permanent: yes
     immediate: yes
     state: enabled
@@ -25,14 +35,14 @@
   ansible.builtin.debug:
     msg:
       - "Firewall configured for rpm-ostree repository"
-      - "HTTPS port {{ flatpak_repo_https_port }}/tcp opened"
+      - "HTTP port {{ flatpak_repo_http_port | default('8080') }}/tcp opened"
+      - "{% if rpm_ostree_enable_https | default(true) | bool %}HTTPS port {{ flatpak_repo_https_port | default('8453') }}/tcp opened{% endif %}"
   when:
     - firewalld_status.status is defined
     - firewalld_status.status.ActiveState == "active"
-    - rpm_ostree_enable_https | default(true) | bool
 
 - name: Display firewall not active message
   ansible.builtin.debug:
-    msg: "Firewalld is not active, skipping firewall configuration. Please open port {{ flatpak_repo_https_port }}/tcp manually if needed."
+    msg: "Firewalld is not active, skipping firewall configuration. Please open ports manually if needed (HTTP: {{ flatpak_repo_http_port | default('8080') }}, HTTPS: {{ flatpak_repo_https_port | default('8453') }})."
   when:
     - firewalld_status.status is not defined or firewalld_status.status.ActiveState != "active"
