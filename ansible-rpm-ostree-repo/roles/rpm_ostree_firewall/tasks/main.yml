@@ -20,9 +20,19 @@
     - firewalld_status.status is defined
     - firewalld_status.status.ActiveState == "active"
 
-- name: Open HTTPS port in firewall
+- name: Verify HTTP port is open in firewall
   ansible.posix.firewalld:
-    port: "{{ flatpak_repo_https_port | default('8453') }}/tcp"
+    port: "{{ flatpak_repo_http_port | default('8080') }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - firewalld_status.status is defined
+    - firewalld_status.status.ActiveState == "active"
+
+- name: Verify HTTPS port is open in firewall
+  ansible.posix.firewalld:
+    port: "{{ flatpak_repo_https_port | default('8443') }}/tcp"
     permanent: yes
     immediate: yes
     state: enabled
@@ -35,14 +45,15 @@
   ansible.builtin.debug:
     msg:
       - "Firewall configured for rpm-ostree repository"
-      - "HTTP port {{ flatpak_repo_http_port | default('8080') }}/tcp opened"
-      - "{% if rpm_ostree_enable_https | default(true) | bool %}HTTPS port {{ flatpak_repo_https_port | default('8453') }}/tcp opened{% endif %}"
+      - "Note: rpm-ostree shares ports with Flatpak repository"
+      - "HTTP port {{ flatpak_repo_http_port | default('8080') }}/tcp verified"
+      - "{% if rpm_ostree_enable_https | default(true) | bool %}HTTPS port {{ flatpak_repo_https_port | default('8443') }}/tcp verified{% endif %}"
   when:
     - firewalld_status.status is defined
     - firewalld_status.status.ActiveState == "active"
 
 - name: Display firewall not active message
   ansible.builtin.debug:
-    msg: "Firewalld is not active, skipping firewall configuration. Please open ports manually if needed (HTTP: {{ flatpak_repo_http_port | default('8080') }}, HTTPS: {{ flatpak_repo_https_port | default('8453') }})."
+    msg: "Firewalld is not active, skipping firewall configuration. Ensure ports are open: HTTP {{ flatpak_repo_http_port | default('8080') }}, HTTPS {{ flatpak_repo_https_port | default('8443') }}"
   when:
     - firewalld_status.status is not defined or firewalld_status.status.ActiveState != "active"

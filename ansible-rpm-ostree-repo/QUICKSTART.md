@@ -51,7 +51,9 @@ curl http://YOUR-SERVER-IP:8080/repo/kinoite/config
 
 You should see the OSTree repository config file!
 
-**Note:** By default, HTTPS is enabled and reuses the SSL certificates from your Flatpak setup.
+**Note:**
+- HTTPS is enabled by default and reuses SSL certificates from your Flatpak setup
+- Port 8443 is shared between Flatpak (`/repo/flatpak`) and rpm-ostree (`/repo/kinoite`)
 
 ## Step 5: Create Your First Image
 

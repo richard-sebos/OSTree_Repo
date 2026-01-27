@@ -15,7 +15,7 @@ rpm_ostree_enable_https: true
 
 # Port configuration (match your Flatpak setup)
 flatpak_repo_http_port: 8080
-flatpak_repo_https_port: 8453
+flatpak_repo_https_port: 8443
 
 # SSL certificate paths (reuse from Flatpak setup)
 # If you have custom certificates, update these paths
@@ -30,3 +30,7 @@ selinux_permissive_mode: false
 # Note: This playbook assumes Apache is already installed and configured
 # from the Flatpak repository setup. It will reuse the same SSL certificates
 # and ports (8080 for HTTP, 8443 for HTTPS).
+#
+# Both Flatpak and rpm-ostree repositories are served on the same ports:
+#   https://server:8443/repo/flatpak   (Flatpak)
+#   https://server:8443/repo/kinoite   (rpm-ostree)

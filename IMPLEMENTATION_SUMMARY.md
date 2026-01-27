@@ -52,7 +52,7 @@ The playbook extends your existing Flatpak setup:
 ┌────────────────────────────────────────────────────┐
 │       Apache Server (Shared Infrastructure)        │
 │       HTTP: Port 8080  |  HTTPS: Port 8443         │
-│       (from Flatpak setup)                         │
+│       (Both repos share the same ports)            │
 ├────────────────────────────────────────────────────┤
 │                                                    │
 │  Existing (Flatpak):                               │
@@ -62,10 +62,12 @@ The playbook extends your existing Flatpak setup:
 │                                                    │
 │  New (rpm-ostree - added by this playbook):       │
 │  ├─ http://server:8080/repo/kinoite               │
-│  └─ https://server:8443/repo/kinoite              │
+│  └─ https://server:8443/repo/kinoite  ← Same port!│
 │      → /srv/ostree/rpm-ostree/kinoite             │
 │                                                    │
 └────────────────────────────────────────────────────┘
+
+Both repositories coexist on the same ports using different URL paths.
 ```
 
 ### What the Playbook Does

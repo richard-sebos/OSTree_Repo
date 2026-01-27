@@ -1,3 +1,4 @@
 ---
 # Firewall configuration defaults
-# Ports are inherited from group_vars
+# Note: rpm-ostree shares the same HTTPS port (8443) as Flatpak
+# The firewall should already have port 8443 open from Flatpak setup

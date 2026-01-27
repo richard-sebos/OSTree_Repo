@@ -78,8 +78,8 @@ The following defaults are set in `group_vars/rpm_ostree_repo_servers.yml`:
 - **HTTP Alias:** `/repo/kinoite`
 - **Repository Mode:** `archive-z2`
 - **HTTPS:** `Enabled` (reuses Flatpak SSL certificates)
-- **HTTPS Port:** `8443` (from Flatpak setup)
-- **HTTP Port:** `8080` (from Flatpak setup)
+- **HTTPS Port:** `8443` (shared with Flatpak)
+- **HTTP Port:** `8080` (shared with Flatpak)
 
 ### Customization
 
