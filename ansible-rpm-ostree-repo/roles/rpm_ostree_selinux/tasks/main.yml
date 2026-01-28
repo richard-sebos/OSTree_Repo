@@ -35,7 +35,7 @@
 
 - name: Verify SELinux context is applied
   ansible.builtin.command:
-    cmd: ls -Z {{ rpm_ostree_repo_path }}
+    cmd: ls -Z {{ rpm_ostree_repo_base_path }}
   register: selinux_context
   when:
     - selinux_status.stdout != "Disabled"
