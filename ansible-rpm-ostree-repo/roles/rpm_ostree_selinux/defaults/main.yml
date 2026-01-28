@@ -1,3 +1,6 @@
 ---
 # SELinux configuration for rpm-ostree
 selinux_permissive_mode: false
+
+# Repository base path
+rpm_ostree_repo_base_path: /srv/ostree/rpm-ostree

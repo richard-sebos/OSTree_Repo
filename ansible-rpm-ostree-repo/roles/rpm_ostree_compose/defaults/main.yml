@@ -3,6 +3,11 @@
 # Version: 1.0.0
 # Last Updated: 2026-01-26
 
+# Repository configuration
+rpm_ostree_repo_base_path: /srv/ostree/rpm-ostree
+rpm_ostree_repo_dev_path: "{{ rpm_ostree_repo_base_path }}/dev"
+rpm_ostree_repo_prod_path: "{{ rpm_ostree_repo_base_path }}/prod"
+
 # Treefile configuration
 rpm_ostree_treefile_name: kinoite.json
 rpm_ostree_treefile_path: /etc/rpm-ostree/treefiles
