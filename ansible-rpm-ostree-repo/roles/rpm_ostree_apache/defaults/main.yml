@@ -1,7 +1,17 @@
 ---
 # Apache configuration for rpm-ostree
-rpm_ostree_http_alias: /repo/kinoite
 rpm_ostree_enable_https: true
+
+# Repository base path
+rpm_ostree_repo_base_path: /srv/ostree/rpm-ostree
+
+# Dev and prod paths
+rpm_ostree_repo_dev_path: "{{ rpm_ostree_repo_base_path }}/dev"
+rpm_ostree_repo_prod_path: "{{ rpm_ostree_repo_base_path }}/prod"
+
+# HTTP aliases
+rpm_ostree_http_alias_dev: /repo/kinoite/dev
+rpm_ostree_http_alias_prod: /repo/kinoite/prod
 
 # SSL certificate paths (reuse from Flatpak setup)
 ssl_cert_dir: /etc/pki/tls/certs
