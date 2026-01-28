@@ -14,73 +14,63 @@
 
 - name: Create dev repository directory
   ansible.builtin.file:
-    path: "{{ rpm_ostree_repo_dev_path }}"
+    path: "{{ rpm_ostree_repo_dev_path | default(rpm_ostree_repo_base_path ~ '/dev') }}"
     state: directory
     mode: '0755'
     owner: root
     group: root
-  when: rpm_ostree_environments | selectattr('name', 'equalto', 'dev') | selectattr('enabled', 'equalto', true) | list | length > 0
 
 - name: Create prod repository directory
   ansible.builtin.file:
-    path: "{{ rpm_ostree_repo_prod_path }}"
+    path: "{{ rpm_ostree_repo_prod_path | default(rpm_ostree_repo_base_path ~ '/prod') }}"
     state: directory
     mode: '0755'
     owner: root
     group: root
-  when: rpm_ostree_environments | selectattr('name', 'equalto', 'prod') | selectattr('enabled', 'equalto', true) | list | length > 0
 
 - name: Check if dev repository is already initialized
   ansible.builtin.stat:
-    path: "{{ rpm_ostree_repo_dev_path }}/config"
+    path: "{{ rpm_ostree_repo_dev_path | default(rpm_ostree_repo_base_path ~ '/dev') }}/config"
   register: repo_config_dev
-  when: rpm_ostree_environments | selectattr('name', 'equalto', 'dev') | selectattr('enabled', 'equalto', true) | list | length > 0
 
 - name: Check if prod repository is already initialized
   ansible.builtin.stat:
-    path: "{{ rpm_ostree_repo_prod_path }}/config"
+    path: "{{ rpm_ostree_repo_prod_path | default(rpm_ostree_repo_base_path ~ '/prod') }}/config"
   register: repo_config_prod
-  when: rpm_ostree_environments | selectattr('name', 'equalto', 'prod') | selectattr('enabled', 'equalto', true) | list | length > 0
 
 - name: Initialize dev OSTree repository
   ansible.builtin.command:
-    cmd: ostree init --mode={{ rpm_ostree_repo_mode }} --repo={{ rpm_ostree_repo_dev_path }}
-  when:
-    - rpm_ostree_environments | selectattr('name', 'equalto', 'dev') | selectattr('enabled', 'equalto', true) | list | length > 0
-    - not repo_config_dev.stat.exists
+    cmd: ostree init --mode={{ rpm_ostree_repo_mode | default('archive-z2') }} --repo={{ rpm_ostree_repo_dev_path | default(rpm_ostree_repo_base_path ~ '/dev') }}
+  when: not repo_config_dev.stat.exists
 
 - name: Initialize prod OSTree repository
   ansible.builtin.command:
-    cmd: ostree init --mode={{ rpm_ostree_repo_mode }} --repo={{ rpm_ostree_repo_prod_path }}
-  when:
-    - rpm_ostree_environments | selectattr('name', 'equalto', 'prod') | selectattr('enabled', 'equalto', true) | list | length > 0
-    - not repo_config_prod.stat.exists
+    cmd: ostree init --mode={{ rpm_ostree_repo_mode | default('archive-z2') }} --repo={{ rpm_ostree_repo_prod_path | default(rpm_ostree_repo_base_path ~ '/prod') }}
+  when: not repo_config_prod.stat.exists
 
 - name: Set dev repository permissions
   ansible.builtin.file:
-    path: "{{ rpm_ostree_repo_dev_path }}"
+    path: "{{ rpm_ostree_repo_dev_path | default(rpm_ostree_repo_base_path ~ '/dev') }}"
     state: directory
     mode: '0755'
     owner: root
     group: root
     recurse: yes
-  when: rpm_ostree_environments | selectattr('name', 'equalto', 'dev') | selectattr('enabled', 'equalto', true) | list | length > 0
 
 - name: Set prod repository permissions
   ansible.builtin.file:
-    path: "{{ rpm_ostree_repo_prod_path }}"
+    path: "{{ rpm_ostree_repo_prod_path | default(rpm_ostree_repo_base_path ~ '/prod') }}"
     state: directory
     mode: '0755'
     owner: root
     group: root
     recurse: yes
-  when: rpm_ostree_environments | selectattr('name', 'equalto', 'prod') | selectattr('enabled', 'equalto', true) | list | length > 0
 
 - name: Display repository information
   ansible.builtin.debug:
     msg:
       - "rpm-ostree repositories initialized:"
-      - "  DEV:  {{ rpm_ostree_repo_dev_path }}"
-      - "  PROD: {{ rpm_ostree_repo_prod_path }}"
-      - "Repository mode: {{ rpm_ostree_repo_mode }}"
+      - "  DEV:  {{ rpm_ostree_repo_dev_path | default(rpm_ostree_repo_base_path ~ '/dev') }}"
+      - "  PROD: {{ rpm_ostree_repo_prod_path | default(rpm_ostree_repo_base_path ~ '/prod') }}"
+      - "Repository mode: {{ rpm_ostree_repo_mode | default('archive-z2') }}"
       - "Ready for composing Kinoite images in dev and prod"

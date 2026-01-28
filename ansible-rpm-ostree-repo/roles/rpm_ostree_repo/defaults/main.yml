@@ -1,6 +1,8 @@
 ---
 # rpm-ostree Repository Configuration
 rpm_ostree_repo_base_path: /srv/ostree/rpm-ostree
-rpm_ostree_repo_name: kinoite
-rpm_ostree_repo_path: "{{ rpm_ostree_repo_base_path }}/{{ rpm_ostree_repo_name }}"
 rpm_ostree_repo_mode: archive-z2
+
+# Dev and prod paths
+rpm_ostree_repo_dev_path: "{{ rpm_ostree_repo_base_path }}/dev"
+rpm_ostree_repo_prod_path: "{{ rpm_ostree_repo_base_path }}/prod"
