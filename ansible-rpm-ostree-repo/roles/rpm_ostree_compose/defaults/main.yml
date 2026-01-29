@@ -16,6 +16,9 @@ rpm_ostree_treefile_full_path: "{{ rpm_ostree_treefile_path }}/{{ rpm_ostree_tre
 # Compose configuration
 rpm_ostree_compose_on_setup: false  # Set to true to compose image during initial setup
 rpm_ostree_ref: fedora/x86_64/kinoite/stable
+rpm_ostree_ref_dev: fedora/x86_64/kinoite/dev
+rpm_ostree_ref_prod: fedora/x86_64/kinoite/stable
+rpm_ostree_compose_environments: []  # List of environments to compose (e.g., ['dev', 'prod'])
 
 # Fedora repositories
 rpm_ostree_fedora_release: 41  # Fedora version
