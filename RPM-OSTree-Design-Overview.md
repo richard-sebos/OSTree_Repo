@@ -9,7 +9,8 @@
 - We had not patch management or testing process.
 - In the end, the update was successful, which I think allow the live patching of endpoint without developing plan to continue.
 
-- In the last post the Kinoite Flatpak 
+- In the last post the Kinoite Flatpak local repo that allow to test and certif application and publish them to the repo so users can install only approved allocations
+- It used OSTree implement the repo and next the same OSTree will be used to store updates to be applied to the Kinoite installed
 ## Executive Summary
 
 This document outlines the design and implementation of an automated rpm-ostree repository infrastructure for hosting custom Fedora Kinoite images. The solution extends existing Flatpak OSTree infrastructure and implements a dev/prod workflow for safe image deployment using Ansible automation.
