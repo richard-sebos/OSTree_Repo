@@ -56,6 +56,8 @@
 - Additional configuration changes were needed to the Apache server to allow ` https://kinoite:8443/repo/kinoite/dev/` and ` https://kinoite:8443/repo/kinoite/prod/` where the images can be access from.
 - No additional firewall changes were needed.
 
+
+
 ### Composing an Image
 
 
