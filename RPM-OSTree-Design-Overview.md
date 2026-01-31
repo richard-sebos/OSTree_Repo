@@ -12,12 +12,29 @@
 - In the last post the Kinoite Flatpak local repo that allow to test and certif application and publish them to the repo so users can install only approved allocations
 - It used OSTree implement the repo and next the same OSTree will be used to store updates images to be rebase to the Kinoite installed.
 
-## Rebasing vs Updating
+## Updating
 - in a traditional RHEL Linux system commands like `yum` or `dnf` are used to update the system.
 - It download indivual updates and installs them on the base install.
 - If there are issues, then either some type of rollback is needed or the updatesd need to be backout and error left dealt with
 - Kinoite works differently, a new OS image is download and when the system reboots, the new image becomes active
 - The existing OS image can be left on the system and the user can fall back to that image if there are issues with the update
+
+## Setup OSTree Repo
+- The Flatpak local repo setup from last post, setup an OSTree repo that will be used as a base for composing images.
+- This will allow the website used by the Flatpak repo to be used by the OSTree repo, which includes the cert that was setup on the webserver.
+- The only addiitional pached needed to install was was rpm-ostree
+
+### RPM OSTree Repo
+- before Kinoite images can be built, a repo storage needs to be created.
+- A dev and prod location is created so dev images can be created and test and promoted to prod
+```
+     /srv/ostree/rpm-ostree/
+     ├── dev/
+     └── prod/
+
+```
+- 'ostree init` is run to build initialize the repos
+- This builds the structure to compose the Kinooteimages to deploy
 
 ## Executive Summary
 
