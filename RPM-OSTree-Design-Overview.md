@@ -36,6 +36,9 @@
 - 'ostree init` is run to build initialize the repos
 - This builds the structure to compose the Kinooteimages to deploy
 
+### SELinux Changes
+
+
 ## Executive Summary
 
 This document outlines the design and implementation of an automated rpm-ostree repository infrastructure for hosting custom Fedora Kinoite images. The solution extends existing Flatpak OSTree infrastructure and implements a dev/prod workflow for safe image deployment using Ansible automation.
