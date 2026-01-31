@@ -37,6 +37,26 @@
 - This builds the structure to compose the Kinooteimages to deploy
 
 ### SELinux Changes
+- With web server installed, if the files permission are not setup right, the files are exposed.
+- SELinux is a additional security tool built into RHEL family distros.
+- There is a SELinux contact for Apache webserver that allow read access to file and directories but prevents:
+* ❌ Write to files
+* ❌ Create new files
+* ❌ Delete files
+* ❌ Modify files
+* ❌ Execute files as programs
+* ❌ Change permissions
+* ❌ Change ownership
+- The webserver is how OS Images are going to be access but the employees devices, this step allows the web server to have access to the files but not allowed to change them, securing the images.
+- Since these images will be deployed across the business, securing is important.
+
+### Deploying Images
+- With the repo built and secured, it is time to expose access to the user devices.
+- HTTPS was setup for Flatpak and the same will be used here.
+- Additional configuration changes were needed to the Apache server to allow ` https://kinoite:8443/repo/kinoite/dev/` and ` https://kinoite:8443/repo/kinoite/prod/` where the images can be access from.
+- No additional firewall changes were needed.
+
+### Composing an Image
 
 
 ## Executive Summary
