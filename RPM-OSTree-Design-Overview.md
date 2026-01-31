@@ -7,7 +7,9 @@
 - I know most of the time Windows updates do causes issues but personally, I was not will to bet the business on it.
 - I quickly told the critical departments to wait until the end of the day.
 - We had not patch management or testing process.
-- In the end, the update was successful, which I think allow the live patching of endpoint without developing plan to continue
+- In the end, the update was successful, which I think allow the live patching of endpoint without developing plan to continue.
+
+- In the last post the Kinoite Flatpak 
 ## Executive Summary
 
 This document outlines the design and implementation of an automated rpm-ostree repository infrastructure for hosting custom Fedora Kinoite images. The solution extends existing Flatpak OSTree infrastructure and implements a dev/prod workflow for safe image deployment using Ansible automation.
