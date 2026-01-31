@@ -53,13 +53,33 @@
 ### Deploying Images
 - With the repo built and secured, it is time to expose access to the user devices.
 - HTTPS was setup for Flatpak and the same will be used here.
-- Additional configuration changes were needed to the Apache server to allow ` https://kinoite:8443/repo/kinoite/dev/` and ` https://kinoite:8443/repo/kinoite/prod/` where the images can be access from.
+- Additional configuration changes were needed to the Apache server to allow ` https://kinoite.sebostech.local:8443/repo/kinoite/dev/` and ` https://kinoite:8443/repo/kinoite/prod/` where the images can be access from.
 - No additional firewall changes were needed.
 
-
-
 ### Composing an Image
+- the last step is to build a new Kinoite image.
+- On the first build, a `/etc/rpm-ostree/treefiles/kinoite-dev.json` and `/etc/rpm-ostree/treefiles/kinoite-prod.json` is needed to define  Critical packages to include in the image.
+- `rpm-ostree compose tree` builds.
+  - ✅ The filesystem tree (directory structure)
+  - ✅ The OS image (complete operating system)
+  - ✅ The OSTree commit (versioned snapshot)
+- `ostree summary -u` create a repository summary, refreshes the repo's index/
+- From there the dev image can be tested and once ready moved to production to be deployed.
 
+## So why do this
+- Installing Kinoite desktop allows for a common desktop across the orginaization.
+- Creating a dev update process allows for testing of an update image before being deployed to production.
+- Migrating dev images to production allows for secur
+3. Optionally composes OS images (if enabled)
+   ├─ Compose dev image
+   └─ Compose prod image
+
+4. Updates repository summaries (if composed)
+   ├─ Update dev repo summary
+   └─ Update prod repo summary
+
+5. Displays instructions
+   └─ Shows how to manually compose if not automatic
 
 ## Executive Summary
 
