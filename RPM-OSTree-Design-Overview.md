@@ -10,7 +10,15 @@
 - In the end, the update was successful, which I think allow the live patching of endpoint without developing plan to continue.
 
 - In the last post the Kinoite Flatpak local repo that allow to test and certif application and publish them to the repo so users can install only approved allocations
-- It used OSTree implement the repo and next the same OSTree will be used to store updates to be applied to the Kinoite installed
+- It used OSTree implement the repo and next the same OSTree will be used to store updates images to be rebase to the Kinoite installed.
+
+## Rebasing vs Updating
+- in a traditional RHEL Linux system commands like `yum` or `dnf` are used to update the system.
+- It download indivual updates and installs them on the base install.
+- If there are issues, then either some type of rollback is needed or the updatesd need to be backout and error left dealt with
+- Kinoite works differently, a new OS image is download and when the system reboots, the new image becomes active
+- The existing OS image can be left on the system and the user can fall back to that image if there are issues with the update
+
 ## Executive Summary
 
 This document outlines the design and implementation of an automated rpm-ostree repository infrastructure for hosting custom Fedora Kinoite images. The solution extends existing Flatpak OSTree infrastructure and implements a dev/prod workflow for safe image deployment using Ansible automation.
