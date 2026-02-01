@@ -1,75 +1,131 @@
-# rpm-ostree Repository Infrastructure - Design Overview
+# OS Updates on the Corporate Linux Desktop
 
+Updating systems should be simple, right? For your average home user or small setup, it usually is. But once you're managing a medium to large environment, things start getting a lot more complicated. I used to work at a company with around 50 or 60 endpoints, and one day the Windows admin sent out a company-wide email telling everyone to update their machines ASAP.
 
-- Updated should be a simple thing.
-- When you have a couple of home device it can be but once you get into medium to large companies it becomes more complaicated.
-- I worked for a company once that had about 50 to 60 endpoints and a Windows administrator sent an email to everyone to updates their device ASAP.
-- I know most of the time Windows updates do causes issues but personally, I was not will to bet the business on it.
-- I quickly told the critical departments to wait until the end of the day.
-- We had not patch management or testing process.
-- In the end, the update was successful, which I think allow the live patching of endpoint without developing plan to continue.
+Now, I know Windows updates can be hit or miss, and while most go fine, I wasn't about to bet the whole business on it. I told the critical departments to hold off until the end of the day, just in case. At the time, we didn’t have any kind of patch management or testing process in place—just cross your fingers and hope. Luckily, the update went through without a hitch. But honestly, that was more luck than good planning.
 
-- In the last post the Kinoite Flatpak local repo that allow to test and certif application and publish them to the repo so users can install only approved allocations
-- It used OSTree implement the repo and next the same OSTree will be used to store updates images to be rebase to the Kinoite installed.
+That experience stuck with me. It made it clear how important it is to have a solid update strategy, especially one that lets you test first, deploy with confidence, and roll back if something goes wrong.
 
-## Updating
-- in a traditional RHEL Linux system commands like `yum` or `dnf` are used to update the system.
-- It download indivual updates and installs them on the base install.
-- If there are issues, then either some type of rollback is needed or the updatesd need to be backout and error left dealt with
-- Kinoite works differently, a new OS image is download and when the system reboots, the new image becomes active
-- The existing OS image can be left on the system and the user can fall back to that image if there are issues with the update
+In my last post [Flatpak repository](https://richard-sebos.github.io/sebostechnology/posts/Flatpak-Repo/), I talked about setting up a local Flatpak repo for Kinoite. That setup let us test and approve apps before making them available to users. We used OSTree under the hood for that, and now we’re using the same tech to handle system updates by storing and serving full OS images for Kinoite systems.
 
-## Setup OSTree Repo
-- The Flatpak local repo setup from last post, setup an OSTree repo that will be used as a base for composing images.
-- This will allow the website used by the Flatpak repo to be used by the OSTree repo, which includes the cert that was setup on the webserver.
-- The only addiitional pached needed to install was was rpm-ostree
+---
 
-### RPM OSTree Repo
-- before Kinoite images can be built, a repo storage needs to be created.
-- A dev and prod location is created so dev images can be created and test and promoted to prod
+## What Is OSTree?
+
+OSTree is basically a Git-like version control system for operating system binaries. Instead of tracking source code, it manages full filesystem trees. It allows systems to switch between entire OS versions (called *commits*) safely and efficiently. Each commit is read-only and versioned, which makes rollback possible and updates less risky.
+
+It's not a package manager on its own—it works underneath rpm-ostree, which combines OSTree’s image management with the familiar RPM packaging system. This combo lets you treat the OS like a single versioned unit, rather than a collection of individual packages.
+
+In this setup, OSTree is the backbone that stores and serves the OS images, making reliable updates and rollbacks possible.
+
+---
+
+## Updating with rpm-ostree
+
+On traditional RHEL-based systems, tools like `yum` or `dnf` are used to download and apply updates. These tools modify the existing installation directly, and if something breaks, troubleshooting often involves rolling back individual packages or dealing with partial failures.
+
+Kinoite, through rpm-ostree, takes a different approach. Instead of applying updates piecemeal, a new, complete OS image is downloaded and activated upon reboot. The previous image remains available, enabling a quick rollback if issues arise. This image-based update model provides a clean, reliable upgrade path with far fewer chances of mid-update problems.
+
+---
+
+## Setting Up the OSTree Repo
+
+A previously configured Flatpak repositor already established the foundation for an OSTree repo. That same structure is now leveraged to store and serve Kinoite images. Existing HTTPS configurations, including TLS certificates, can be reused. The only additional package required is `rpm-ostree`.
+
+To organize the system update pipeline, the following directory structure is recommended:
+
 ```
-     /srv/ostree/rpm-ostree/
-     ├── dev/
-     └── prod/
-
+/srv/ostree/rpm-ostree/
+├── dev/
+└── prod/
 ```
-- 'ostree init` is run to build initialize the repos
-- This builds the structure to compose the Kinooteimages to deploy
 
-### SELinux Changes
-- With web server installed, if the files permission are not setup right, the files are exposed.
-- SELinux is a additional security tool built into RHEL family distros.
-- There is a SELinux contact for Apache webserver that allow read access to file and directories but prevents:
-* ❌ Write to files
-* ❌ Create new files
-* ❌ Delete files
-* ❌ Modify files
-* ❌ Execute files as programs
-* ❌ Change permissions
-* ❌ Change ownership
-- The webserver is how OS Images are going to be access but the employees devices, this step allows the web server to have access to the files but not allowed to change them, securing the images.
-- Since these images will be deployed across the business, securing is important.
+Both development and production repositories are initialized using the `ostree init` command. This prepares the storage for image composition and deployment.
 
-### Deploying Images
-- With the repo built and secured, it is time to expose access to the user devices.
-- HTTPS was setup for Flatpak and the same will be used here.
-- Additional configuration changes were needed to the Apache server to allow ` https://kinoite.sebostech.local:8443/repo/kinoite/dev/` and ` https://kinoite:8443/repo/kinoite/prod/` where the images can be access from.
-- No additional firewall changes were needed.
+---
 
-### Composing an Image
-- the last step is to build a new Kinoite image.
-- On the first build, a `/etc/rpm-ostree/treefiles/kinoite-dev.json` and `/etc/rpm-ostree/treefiles/kinoite-prod.json` is needed to define  Critical packages to include in the image.
-- `rpm-ostree compose tree` builds.
-  - ✅ The filesystem tree (directory structure)
-  - ✅ The OS image (complete operating system)
-  - ✅ The OSTree commit (versioned snapshot)
-- `ostree summary -u` create a repository summary, refreshes the repo's index/
-- From there the dev image can be tested and once ready moved to production to be deployed.
+## SELinux Considerations
 
-## So why do this
-- Installing Kinoite desktop allows for a common desktop across the orginaization.
-- Creating a dev update process allows for testing of an update image before being deployed to production.
-- Migrating dev images to production allows for verified images getting deployed to the users devices.
-- Users devices are updates without needed to access external internet
-- In the rare case there is an issues, the device can rollback to the prior image reducing downtime.
-  
+When serving OS images via a web server, proper SELinux configuration is essential. SELinux is a mandatory access control system built into RHEL and related distributions. Apache, the web server in this setup, must be allowed to *read* files but should be restricted from making any changes.
+
+By applying the correct SELinux context, the server is prevented from:
+
+* ❌ Writing to files
+* ❌ Creating or deleting files
+* ❌ Modifying content
+* ❌ Executing files
+* ❌ Changing ownership or permissions
+
+This ensures that OS images remain protected and immutable, even while being accessible to endpoint devices for updates.
+
+---
+
+## Composing an Image
+
+With the infrastructure in place, Kinoite images can now be built.
+
+Start by creating two configuration files:
+
+* `/etc/rpm-ostree/treefiles/kinoite-dev.json`
+* `/etc/rpm-ostree/treefiles/kinoite-prod.json`
+Example:
+```json
+{
+  "ref": "kinoite/dev/x86_64",
+  "pkg-lists": [],
+  "repos": [
+    "fedora",
+    "updates"
+  ],
+  "include": "/usr/share/ublue-os/ostree-tree-base.json",
+  "packages": [
+    "fish",
+    "vim",
+    "gnome-terminal",
+    "htop",
+    "flatpak",
+    "firefox",
+    "cockpit",
+    "sssd",
+    "sssd-tools"
+  ],
+  "exclude": [],
+  "postprocess": [
+    {
+      "type": "script",
+      "commands": [
+        "systemctl enable sssd",
+        "systemctl enable cockpit.socket"
+      ]
+    }
+  ]
+}
+```
+These files define the core packages and configurations included in each image. Use the `rpm-ostree compose tree` command to:
+
+* ✅ Generate the filesystem tree
+* ✅ Build the full OS image
+* ✅ Create an OSTree commit (a versioned snapshot)
+
+Finally, update the repo summary with `ostree summary -u` to make the new image available to clients. The dev image can be tested internally, and once validated, promoted to the production branch for organizational rollout.
+
+---
+## Deploying Images
+
+Once the repo is initialized and secured, the next step is to make OS images accessible to user devices. If HTTPS has already been configured for Flatpak, the same setup can be extended here.
+
+Apache is configured to expose the following URLs:
+
+* `https://kinoite.sebostech.local:8443/repo/kinoite/dev/`
+* `https://kinoite.sebostech.local:8443/repo/kinoite/prod/`
+
+No additional firewall adjustments are necessary, keeping deployment straightforward.
+
+---
+## Wrapping It Up
+
+Setting up an rpm-ostree infrastructure like this might take a little effort at the start, but it brings major long-term benefits. With Kinoite as a standardized desktop, updates become predictable, testable, and easy to roll out. The dev/prod split ensures updates can be verified before reaching end users, minimizing disruptions and surprises.
+
+Since all updates are served locally, there's no dependency on external internet access—ideal for secure or bandwidth-limited environments. And in the rare event something goes wrong, the rollback functionality lets users return to the previous working state in just a reboot, dramatically reducing downtime.
+
+This setup brings stability, control, and peace of mind—making system updates less of a gamble and more of a routine operation.
