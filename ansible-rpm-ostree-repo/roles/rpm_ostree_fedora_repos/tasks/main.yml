@@ -1,0 +1,49 @@
+---
+# rpm_ostree_fedora_repos role
+# Version: 1.0.0
+# Last Updated: 2026-02-05
+# Purpose: Install Fedora repository definitions needed for rpm-ostree compose
+#          on non-Fedora systems (Rocky, RHEL, etc.)
+
+- name: Check if running on Fedora
+  ansible.builtin.stat:
+    path: /etc/fedora-release
+  register: fedora_check
+
+- name: Display OS information
+  ansible.builtin.debug:
+    msg: "OS Family: {{ ansible_os_family }}, Distribution: {{ ansible_distribution }}"
+
+- name: Create Fedora repository directory
+  ansible.builtin.file:
+    path: /usr/lib/yum.repos.d
+    state: directory
+    mode: '0755'
+  when: not fedora_check.stat.exists
+
+- name: Deploy Fedora base repository
+  ansible.builtin.template:
+    src: fedora.repo.j2
+    dest: /usr/lib/yum.repos.d/fedora.repo
+    mode: '0644'
+  when: not fedora_check.stat.exists
+
+- name: Deploy Fedora updates repository
+  ansible.builtin.template:
+    src: fedora-updates.repo.j2
+    dest: /usr/lib/yum.repos.d/fedora-updates.repo
+    mode: '0644'
+  when: not fedora_check.stat.exists
+
+- name: Display repository installation status
+  ansible.builtin.debug:
+    msg:
+      - "Fedora repositories configured for rpm-ostree compose"
+      - "Location: /usr/lib/yum.repos.d/"
+      - "Repos: fedora, fedora-updates"
+  when: not fedora_check.stat.exists
+
+- name: Skip repository installation on Fedora systems
+  ansible.builtin.debug:
+    msg: "Running on Fedora - using system repos"
+  when: fedora_check.stat.exists

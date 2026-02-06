@@ -43,6 +43,9 @@
     - role: rpm_ostree_repo
       tags: [repository, setup]
 
+    - role: rpm_ostree_fedora_repos
+      tags: [repos, setup]
+
     - role: rpm_ostree_selinux
       tags: [selinux, security, setup]
 
